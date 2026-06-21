@@ -70,22 +70,24 @@ Line-oriented, `#` starts a comment. Three kinds of line:
 name      <client>          # JACK client name (default: midi2cv)
 connect   <port> <target>   # optional: auto-connect an output at startup
 
-# channel: <port> <type> <midich> <param> <scale> <offset>
+# channel: <port> <type> <midich> <param> <scale> <offset> [pulse_ms]
 pitch1    pitch    1   -    0.008333  0.0
 gate1     gate     1   -    0.5       0.0
 kick      trig     10  36   0.5       0.0
+quarter   clock    -   24   0.5       0.0   5
 ```
 
 Channel fields:
 
-| field    | meaning                                                       |
-|----------|---------------------------------------------------------------|
-| `port`   | JACK output port short name                                    |
-| `type`   | `pitch` / `gate` / `trig` / `vel` / `cc` (see below)          |
-| `midich` | MIDI channel, 1–16                                             |
-| `param`  | `trig`: note number; `cc`: CC number; `-` for the rest        |
-| `scale`  | calibration: volts-per-unit term                              |
-| `offset` | calibration: zero-point term                                  |
+| field      | meaning                                                       |
+|------------|---------------------------------------------------------------|
+| `port`     | JACK output port short name                                   |
+| `type`     | `pitch` / `gate` / `trig` / `vel` / `cc` / `clock` (see below)|
+| `midich`   | MIDI channel, 1–16 (`-` for `clock`, which is system-wide)    |
+| `param`    | `trig`: note; `cc`: CC number; `clock`: division; else `-`    |
+| `scale`    | calibration: volts-per-unit term                             |
+| `offset`   | calibration: zero-point term                                 |
+| `pulse_ms` | optional; `clock` pulse width in ms (default 5), else ignored |
 
 Channel types and the logical value they map:
 
@@ -96,11 +98,19 @@ Channel types and the logical value they map:
 | `trig`  | one specific note (`param`)              | 1 that note held / 0        |
 | `vel`   | velocity of the last note-on             | velocity / 127              |
 | `cc`    | a specific CC (`param`)                  | cc value / 127              |
+| `clock` | MIDI clock, every `param` clocks (24/qn) | a `pulse_ms` pulse, 1 / 0   |
 
 Output sample:
 
 - `pitch`: `sample = offset + semitone * scale`
-- all others: `sample = offset + value * scale`
+- all others: `sample = offset + value * scale` (so `offset` is low, `offset +
+  scale` is high)
+
+The `clock` type counts incoming MIDI timing clocks (`0xF8`, 24 per quarter
+note) and fires a `pulse_ms`-wide pulse every `param` clocks: `param` 24 =
+quarter, 12 = eighth, 6 = sixteenth, 96 = bar. It runs by default (works with
+bare clock sources); a sequencer's **Start** (`0xFA`) resets the divider phase,
+**Stop** (`0xFC`) drops the outputs low, **Continue** (`0xFB`) resumes.
 
 Note priority is mono, last-note: the newest held note wins, and `pitch` holds
 its last value after release (the `gate` goes low). Event timing is
@@ -132,11 +142,16 @@ Procedure for a `pitch` channel:
 
 - `examples/melodic.conf` — mono voice: pitch + gate + velocity + mod wheel.
 - `examples/drums.conf` — eight drum triggers on MIDI channel 10.
+- `examples/clock.conf` — clock divisions: quarter / eighth / sixteenth / bar.
+
+## Tools
+
+`tools/` holds throwaway helpers for testing against a live JACK server: a
+MIDI-clock generator (`clockgen.c`) and a capture analyzer (`analyze.py`). See
+`tools/README.md`.
 
 ## Not in v1 (possible extensions)
 
 - Pitch-bend / mod folded into `pitch` (bend state is already captured).
 - Slew / glide smoothing for `cc`.
-- A `clock` channel type: MIDI-clock divisions with per-channel pulse width,
-  phase-reset on Start and low on Stop.
 - Polyphonic voice allocation.

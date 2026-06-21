@@ -23,15 +23,18 @@
 
 /* ------------------------------------------------------------------ types */
 
-typedef enum { T_PITCH, T_GATE, T_TRIG, T_VEL, T_CC } chan_type;
+typedef enum { T_PITCH, T_GATE, T_TRIG, T_VEL, T_CC, T_CLOCK } chan_type;
 
 typedef struct {
 	char       name[64];   /* JACK port short name */
 	chan_type  type;
 	int        midich;     /* 0..15 (1-based in the config file) */
-	int        param;      /* trig: note number; cc: CC number; else -1 */
+	int        param;      /* trig: note; cc: CC; clock: division; else -1 */
 	float      scale;
 	float      offset;
+	float      pulse_ms;   /* clock: pulse width (config) */
+	int        pulse_samples; /* clock: pulse width in frames (derived) */
+	int        pulse_left; /* clock: frames remaining in current pulse */
 	jack_port_t *port;
 } channel;
 
@@ -50,6 +53,10 @@ static channel channels[MAX_CHANNELS];
 static int     nchannels;
 static char    client_name[64] = "midi2cv";
 static mchan   state[16];
+
+/* MIDI-clock transport state (system real-time, no channel). Runs by default
+ * so bare clock sources work; Start resets phase, Stop halts, Continue resumes. */
+static struct { int running; uint32_t tick; } clk = { 1, 0 };
 
 /* connect requests: <port short name> -> <jack target>, applied at startup */
 static struct { char from[64]; char to[128]; } connects[MAX_CHANNELS];
@@ -116,6 +123,7 @@ static float channel_sample(const channel *c)
 	case T_TRIG: value = is_held(m, c->param) ? 1.0f : 0.0f; break;
 	case T_VEL:  value = m->velocity / 127.0f;             break;
 	case T_CC:   value = m->cc[c->param] / 127.0f;         break;
+	case T_CLOCK:                                   /* driven in fill loop */
 	default:     value = 0.0f;                             break;
 	}
 	return c->offset + value * c->scale;
@@ -130,6 +138,7 @@ static int parse_type(const char *s, chan_type *out)
 	else if (!strcmp(s, "trig")) *out = T_TRIG;
 	else if (!strcmp(s, "vel"))  *out = T_VEL;
 	else if (!strcmp(s, "cc"))   *out = T_CC;
+	else if (!strcmp(s, "clock")) *out = T_CLOCK;
 	else return -1;
 	return 0;
 }
@@ -154,11 +163,11 @@ static int load_config(const char *path)
 		return -1;
 	}
 	while (fgets(line, sizeof line, f)) {
-		char tok[6][64];
+		char tok[7][64];
 		int  ntok;
 		lineno++;
-		ntok = sscanf(line, "%63s %63s %63s %63s %63s %63s",
-			      tok[0], tok[1], tok[2], tok[3], tok[4], tok[5]);
+		ntok = sscanf(line, "%63s %63s %63s %63s %63s %63s %63s",
+			      tok[0], tok[1], tok[2], tok[3], tok[4], tok[5], tok[6]);
 		if (ntok < 1 || tok[0][0] == '#')
 			continue;
 
@@ -177,9 +186,11 @@ static int load_config(const char *path)
 			continue;
 		}
 
-		/* channel: <port> <type> <midich> <param> <scale> <offset> */
-		if (ntok != 6) {
-			fprintf(stderr, "midi2cv: %s:%d: expected 6 fields\n",
+		/* channel: <port> <type> <midich> <param> <scale> <offset> [pulse_ms]
+		 * clock uses midich '-' (system-wide), param = division in clocks,
+		 * and the optional pulse_ms field; others ignore pulse_ms. */
+		if (ntok < 6) {
+			fprintf(stderr, "midi2cv: %s:%d: expected at least 6 fields\n",
 				path, lineno);
 			goto fail;
 		}
@@ -194,15 +205,26 @@ static int load_config(const char *path)
 				path, lineno, tok[1]);
 			goto fail;
 		}
-		c->midich = atoi(tok[2]) - 1;
-		if (c->midich < 0 || c->midich > 15) {
-			fprintf(stderr, "midi2cv: %s:%d: midi channel 1..16\n",
-				path, lineno);
-			goto fail;
+		c->param    = (tok[3][0] == '-') ? -1 : atoi(tok[3]);
+		c->scale    = atof(tok[4]);
+		c->offset   = atof(tok[5]);
+		c->pulse_ms = (ntok >= 7) ? atof(tok[6]) : 5.0f;
+
+		if (c->type == T_CLOCK) {
+			c->midich = 0;                  /* clock has no channel */
+			if (c->param < 1) {
+				fprintf(stderr, "midi2cv: %s:%d: clock division "
+					"must be >= 1\n", path, lineno);
+				goto fail;
+			}
+		} else {
+			c->midich = atoi(tok[2]) - 1;
+			if (c->midich < 0 || c->midich > 15) {
+				fprintf(stderr, "midi2cv: %s:%d: midi channel "
+					"1..16\n", path, lineno);
+				goto fail;
+			}
 		}
-		c->param  = (tok[3][0] == '-') ? -1 : atoi(tok[3]);
-		c->scale  = atof(tok[4]);
-		c->offset = atof(tok[5]);
 		nchannels++;
 	}
 	fclose(f);
@@ -219,12 +241,44 @@ static void fill_segment(jack_default_audio_sample_t *outs[],
 			 jack_nframes_t from, jack_nframes_t to)
 {
 	int i;
+	jack_nframes_t f;
 	for (i = 0; i < nchannels; i++) {
-		float s = channel_sample(&channels[i]);
-		jack_nframes_t f;
-		for (f = from; f < to; f++)
-			outs[i][f] = s;
+		channel *c = &channels[i];
+		if (c->type == T_CLOCK) {       /* per-sample pulse countdown */
+			float hi = c->offset + c->scale, lo = c->offset;
+			for (f = from; f < to; f++)
+				outs[i][f] = c->pulse_left > 0
+					? (c->pulse_left--, hi) : lo;
+		} else {
+			float s = channel_sample(c);
+			for (f = from; f < to; f++)
+				outs[i][f] = s;
+		}
 	}
+}
+
+/* One MIDI timing clock (0xF8): start a fresh pulse on every clock channel
+ * whose division boundary falls on this tick, then advance the tick. */
+static void clock_tick(void)
+{
+	int i;
+	if (!clk.running)
+		return;
+	for (i = 0; i < nchannels; i++)
+		if (channels[i].type == T_CLOCK
+		    && clk.tick % (uint32_t)channels[i].param == 0)
+			channels[i].pulse_left = channels[i].pulse_samples;
+	clk.tick++;
+}
+
+/* Stop (0xFC): halt and drop every clock output low. */
+static void clock_stop(void)
+{
+	int i;
+	clk.running = 0;
+	for (i = 0; i < nchannels; i++)
+		if (channels[i].type == T_CLOCK)
+			channels[i].pulse_left = 0;
 }
 
 static int process(jack_nframes_t nframes, void *arg)
@@ -261,7 +315,16 @@ static int process(jack_nframes_t nframes, void *arg)
 			fill_segment(outs, cursor, e.time);
 			cursor = e.time;
 		}
-		if (e.size < 3)                  /* handled messages are 3 bytes */
+		if (e.size == 1) {               /* system real-time, 1 byte */
+			switch (e.buffer[0]) {
+			case 0xf8: clock_tick(); break;          /* timing clock */
+			case 0xfa: clk.tick = 0; clk.running = 1; break; /* start */
+			case 0xfb: clk.running = 1; break;       /* continue */
+			case 0xfc: clock_stop(); break;          /* stop */
+			}
+			continue;
+		}
+		if (e.size < 3)                  /* handled channel msgs are 3 bytes */
 			continue;
 		status = e.buffer[0] & 0xf0;
 		ch     = e.buffer[0] & 0x0f;
@@ -298,6 +361,15 @@ static int setup_jack(void)
 		return -1;
 	}
 	jack_set_process_callback(client, process, NULL);
+
+	jack_nframes_t sr = jack_get_sample_rate(client);
+	for (i = 0; i < nchannels; i++)
+		if (channels[i].type == T_CLOCK) {
+			channels[i].pulse_samples =
+				(int)(channels[i].pulse_ms * sr / 1000.0f);
+			if (channels[i].pulse_samples < 1)
+				channels[i].pulse_samples = 1;
+		}
 
 	midi_in = jack_port_register(client, "midi_in", JACK_DEFAULT_MIDI_TYPE,
 				     JackPortIsInput, 0);
