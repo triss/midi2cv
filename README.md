@@ -155,3 +155,9 @@ MIDI-clock generator (`clockgen.c`) and a capture analyzer (`analyze.py`). See
 - Pitch-bend / mod folded into `pitch` (bend state is already captured).
 - Slew / glide smoothing for `cc`.
 - Polyphonic voice allocation.
+
+## License
+
+Zero-Clause BSD (0BSD) — public-domain-equivalent, no attribution required.
+See [LICENSE](LICENSE). Chosen for permacomputing-style frictionless reuse:
+salvage, fork, and repurpose freely.
