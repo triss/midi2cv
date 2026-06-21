@@ -214,47 +214,73 @@ fail:
 
 /* ------------------------------------------------------- process callback */
 
+/* Write every output's current sample into frames [from, to). */
+static void fill_segment(jack_default_audio_sample_t *outs[],
+			 jack_nframes_t from, jack_nframes_t to)
+{
+	int i;
+	for (i = 0; i < nchannels; i++) {
+		float s = channel_sample(&channels[i]);
+		jack_nframes_t f;
+		for (f = from; f < to; f++)
+			outs[i][f] = s;
+	}
+}
+
 static int process(jack_nframes_t nframes, void *arg)
 {
-	void    *mbuf = jack_port_get_buffer(midi_in, nframes);
-	uint32_t i, ev, nevents;
+	void *mbuf = jack_port_get_buffer(midi_in, nframes);
+	jack_default_audio_sample_t *outs[MAX_CHANNELS];
+	jack_nframes_t cursor = 0;
+	uint32_t ev, nevents;
+	int i;
 	(void)arg;
 
-	if (!test_mode) {
-		nevents = jack_midi_get_event_count(mbuf);
-		for (ev = 0; ev < nevents; ev++) {
-			jack_midi_event_t e;
-			uint8_t status, ch;
-			if (jack_midi_event_get(&e, mbuf, ev) || e.size < 2)
-				continue;
-			status = e.buffer[0] & 0xf0;
-			ch     = e.buffer[0] & 0x0f;
-			switch (status) {
-			case 0x90:                       /* note on */
-				if (e.buffer[2] > 0)
-					note_on(&state[ch], e.buffer[1], e.buffer[2]);
-				else
-					note_off(&state[ch], e.buffer[1]);
-				break;
-			case 0x80:                       /* note off */
-				note_off(&state[ch], e.buffer[1]);
-				break;
-			case 0xb0:                       /* control change */
-				state[ch].cc[e.buffer[1]] = e.buffer[2];
-				break;
-			}
+	for (i = 0; i < nchannels; i++)
+		outs[i] = jack_port_get_buffer(channels[i].port, nframes);
+
+	if (test_mode) {
+		for (i = 0; i < nchannels; i++) {
+			float s = i == test_chan ? test_value : 0.0f;
+			jack_nframes_t f;
+			for (f = 0; f < nframes; f++)
+				outs[i][f] = s;
 		}
+		return 0;
 	}
 
-	for (i = 0; i < (uint32_t)nchannels; i++) {
-		jack_default_audio_sample_t *out =
-			jack_port_get_buffer(channels[i].port, nframes);
-		float s = test_mode ? ((int)i == test_chan ? test_value : 0.0f)
-				    : channel_sample(&channels[i]);
-		jack_nframes_t f;
-		for (f = 0; f < nframes; f++)
-			out[f] = s;
+	/* Walk events in time order; fill each output up to the event's frame
+	 * with pre-event state, then apply it. Transitions land sample-exact. */
+	nevents = jack_midi_get_event_count(mbuf);
+	for (ev = 0; ev < nevents; ev++) {
+		jack_midi_event_t e;
+		uint8_t status, ch;
+		if (jack_midi_event_get(&e, mbuf, ev))
+			continue;
+		if (e.time > cursor) {
+			fill_segment(outs, cursor, e.time);
+			cursor = e.time;
+		}
+		if (e.size < 3)                  /* handled messages are 3 bytes */
+			continue;
+		status = e.buffer[0] & 0xf0;
+		ch     = e.buffer[0] & 0x0f;
+		switch (status) {
+		case 0x90:                       /* note on */
+			if (e.buffer[2] > 0)
+				note_on(&state[ch], e.buffer[1], e.buffer[2]);
+			else
+				note_off(&state[ch], e.buffer[1]);
+			break;
+		case 0x80:                       /* note off */
+			note_off(&state[ch], e.buffer[1]);
+			break;
+		case 0xb0:                       /* control change */
+			state[ch].cc[e.buffer[1]] = e.buffer[2];
+			break;
+		}
 	}
+	fill_segment(outs, cursor, nframes);
 	return 0;
 }
 

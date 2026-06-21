@@ -103,8 +103,9 @@ Output sample:
 - all others: `sample = offset + value * scale`
 
 Note priority is mono, last-note: the newest held note wins, and `pitch` holds
-its last value after release (the `gate` goes low). v1 is block-granular —
-output reflects end-of-block state, so timing is quantised to the JACK period.
+its last value after release (the `gate` goes low). Event timing is
+sample-accurate: transitions land on the exact frame of the MIDI event within
+the JACK period, not quantised to the block boundary.
 
 ## Calibration
 
@@ -136,5 +137,6 @@ Procedure for a `pitch` channel:
 
 - Pitch-bend / mod folded into `pitch` (bend state is already captured).
 - Slew / glide smoothing for `cc`.
-- Sample-accurate event timing within a block.
+- A `clock` channel type: MIDI-clock divisions with per-channel pulse width,
+  phase-reset on Start and low on Stop.
 - Polyphonic voice allocation.
