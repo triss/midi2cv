@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1340 880" font-family="'Segoe UI', Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="ar" markerWidth="12" markerHeight="12" refX="8" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#333333"/>
+    </marker>
+    <marker id="arP" markerWidth="12" markerHeight="12" refX="8" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#7a3e9d"/>
+    </marker>
+    <marker id="arG" markerWidth="12" markerHeight="12" refX="8" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#0b7a4b"/>
+    </marker>
+  </defs>
+  <rect width="1340" height="880" fill="#ffffff"/>
+  <text x="50" y="56" font-size="28" font-weight="700" fill="#111111">Kay · the big idea is messaging</text>
+  <text x="50" y="86" font-size="16" fill="#444444">Objects are cells: a membrane, local state within, talking only by messages. Polymorphism = late-bound messages, not switches.</text>
+
+  <!-- cli cell -->
+  <rect x="70" y="376" width="160" height="100" rx="40" fill="#ffffff" stroke="#c04a00" stroke-width="2.5"/>
+  <rect x="80" y="386" width="140" height="80" rx="32" fill="none" stroke="#c04a00" stroke-width="1" stroke-opacity="0.5"/>
+  <text x="150" y="420" font-size="16" font-weight="700" fill="#c04a00" text-anchor="middle">cli</text>
+  <text x="150" y="442" font-size="13.5" fill="#333333" text-anchor="middle">main()</text>
+
+  <line x1="232" y1="426" x2="298" y2="426" stroke="#333333" stroke-width="2.4" marker-end="url(#ar)"/>
+  <text x="265" y="416" font-size="12.5" fill="#444444" text-anchor="middle">backend_run</text>
+
+  <!-- adapter cell -->
+  <rect x="300" y="360" width="210" height="132" rx="46" fill="#ffffff" stroke="#0061a8" stroke-width="2.5"/>
+  <rect x="311" y="371" width="188" height="110" rx="38" fill="none" stroke="#0061a8" stroke-width="1" stroke-opacity="0.5"/>
+  <text x="405" y="406" font-size="15" font-weight="700" fill="#0061a8" text-anchor="middle">jack · adapter cell</text>
+  <text x="405" y="430" font-size="13" fill="#333333" text-anchor="middle">owns the JACK ports</text>
+  <text x="405" y="450" font-size="13" fill="#333333" text-anchor="middle">copies MIDI → midi_ev</text>
+
+  <line x1="512" y1="426" x2="558" y2="426" stroke="#7a3e9d" stroke-width="2.4" marker-end="url(#arP)"/>
+  <text x="535" y="416" font-size="12.5" fill="#7a3e9d" text-anchor="middle">engine_run</text>
+
+  <!-- engine membrane -->
+  <rect x="560" y="160" width="700" height="616" rx="44" fill="#ffffff" stroke="#7a3e9d" stroke-width="2.5"/>
+  <rect x="572" y="172" width="676" height="592" rx="36" fill="none" stroke="#7a3e9d" stroke-width="1" stroke-opacity="0.5"/>
+  <text x="586" y="200" font-size="17" font-weight="700" fill="#7a3e9d">engine — a cell, and a colony of cells within</text>
+
+  <!-- fill_segment emitter -->
+  <rect x="800" y="226" width="220" height="46" rx="10" fill="#ffffff" stroke="#7a3e9d" stroke-width="2"/>
+  <text x="910" y="255" font-size="14" font-weight="700" fill="#7a3e9d" text-anchor="middle">fill_segment ▶ render</text>
+
+  <g stroke="#7a3e9d" stroke-width="2" fill="none">
+    <path d="M860,272 C770,296 700,316 692,344" marker-end="url(#arP)"/>
+    <path d="M915,272 L920,344" marker-end="url(#arP)"/>
+    <path d="M965,272 C1080,296 1140,316 1150,344" marker-end="url(#arP)"/>
+  </g>
+  <text x="910" y="306" font-size="12.5" fill="#7a3e9d" text-anchor="middle">one message: render(s, out, from, to)</text>
+
+  <!-- cvslot A -->
+  <rect x="592" y="348" width="196" height="158" rx="40" fill="#ffffff" stroke="#c04a00" stroke-width="2.5"/>
+  <text x="690" y="376" font-size="14.5" font-weight="700" fill="#c04a00" text-anchor="middle">cvslot</text>
+  <text x="690" y="398" font-size="13" fill="#333333" text-anchor="middle">answers: render_const</text>
+  <rect x="632" y="416" width="116" height="34" rx="8" fill="#fdf3ee" stroke="#c04a00" stroke-width="1"/>
+  <text x="690" y="438" font-size="12.5" fill="#222222" text-anchor="middle">u : —</text>
+  <polyline points="650,478 730,478" fill="none" stroke="#0061a8" stroke-width="2.4"/>
+  <text x="690" y="496" font-size="11.5" fill="#555555" text-anchor="middle">flat hold</text>
+
+  <!-- cvslot B -->
+  <rect x="812" y="348" width="196" height="158" rx="40" fill="#ffffff" stroke="#c04a00" stroke-width="2.5"/>
+  <text x="910" y="376" font-size="14.5" font-weight="700" fill="#c04a00" text-anchor="middle">cvslot</text>
+  <text x="910" y="398" font-size="13" fill="#333333" text-anchor="middle">answers: render_clock</text>
+  <rect x="838" y="416" width="144" height="34" rx="8" fill="#fdf3ee" stroke="#c04a00" stroke-width="1"/>
+  <text x="910" y="438" font-size="12.5" fill="#222222" text-anchor="middle">u.clock {w, left}</text>
+  <polyline points="868,478 884,478 884,464 900,464 900,478 916,478 916,464 932,464 932,478 952,478" fill="none" stroke="#0061a8" stroke-width="2.4"/>
+  <text x="910" y="496" font-size="11.5" fill="#555555" text-anchor="middle">pulse train</text>
+
+  <!-- cvslot C -->
+  <rect x="1052" y="348" width="196" height="158" rx="40" fill="#ffffff" stroke="#c04a00" stroke-width="2.5"/>
+  <text x="1150" y="376" font-size="14.5" font-weight="700" fill="#c04a00" text-anchor="middle">cvslot</text>
+  <text x="1150" y="398" font-size="13" fill="#333333" text-anchor="middle">answers: render_glide</text>
+  <rect x="1078" y="416" width="144" height="34" rx="8" fill="#fdf3ee" stroke="#c04a00" stroke-width="1"/>
+  <text x="1150" y="438" font-size="12.5" fill="#222222" text-anchor="middle">u.glide {cur, rate}</text>
+  <polyline points="1110,480 1140,464 1170,458 1192,458" fill="none" stroke="#0061a8" stroke-width="2.4"/>
+  <text x="1150" y="496" font-size="11.5" fill="#555555" text-anchor="middle">slew / ramp</text>
+
+  <text x="910" y="544" font-size="14" fill="#7a3e9d" text-anchor="middle" font-style="italic">same message · three answers · the receiver decides (late binding)</text>
+
+  <!-- shared medium -->
+  <rect x="592" y="582" width="656" height="86" rx="22" fill="#eaf5ef" stroke="#0b7a4b" stroke-width="2.5" stroke-dasharray="2 6"/>
+  <text x="920" y="612" font-size="15" font-weight="700" fill="#0b7a4b" text-anchor="middle">state[ ] · the shared medium</text>
+  <text x="920" y="636" font-size="13" fill="#222222" text-anchor="middle">channel notes / CC / velocity — value-reading cells dip in for cvout_sample</text>
+  <text x="920" y="656" font-size="12.5" fill="#0b7a4b" text-anchor="middle">clock cells are generators: they never dip</text>
+
+  <g stroke="#0b7a4b" stroke-width="1.8" stroke-dasharray="4 4" fill="none">
+    <path d="M690,506 L690,580" marker-end="url(#arG)"/>
+    <path d="M1150,506 L1150,580" marker-end="url(#arG)"/>
+  </g>
+
+  <text x="50" y="744" font-size="15" fill="#222222">No caller switches on the source. You send <tspan font-weight="700" fill="#7a3e9d">render</tspan>; the cell answers in its own way. Each cell keeps its state</text>
+  <text x="50" y="768" font-size="15" fill="#222222">private (its <tspan font-style="italic">u</tspan>), shared facts in a common medium. A new source is a <tspan font-weight="700" fill="#c04a00">new cell, not a new branch</tspan>.</text>
+</svg>

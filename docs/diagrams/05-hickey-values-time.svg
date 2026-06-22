@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1340 880" font-family="'Segoe UI', Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="ar" markerWidth="12" markerHeight="12" refX="8" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#333333"/>
+    </marker>
+    <marker id="arP" markerWidth="11" markerHeight="11" refX="7" refY="5" orient="auto">
+      <path d="M0,0 L9,5 L0,9 Z" fill="#7a3e9d"/>
+    </marker>
+  </defs>
+  <rect width="1340" height="880" fill="#ffffff"/>
+  <text x="50" y="56" font-size="28" font-weight="700" fill="#111111">Hickey · value · place · identity · time</text>
+  <text x="50" y="86" font-size="16" fill="#444444">An identity is a series of states (values) over time. midi2cv ships values across its seams and keeps mutable place contained.</text>
+
+  <!-- VALUES -->
+  <text x="50" y="134" font-size="17" font-weight="700" fill="#0b7a4b">VALUES — immutable data in transit</text>
+  <rect x="80" y="150" width="300" height="66" rx="10" fill="#ffffff" stroke="#0b7a4b" stroke-width="2.5"/>
+  <text x="100" y="180" font-size="15" font-weight="700" fill="#0b7a4b">config { … }</text>
+  <text x="100" y="202" font-size="13.5" fill="#333333">parsed once, then read-only</text>
+  <rect x="500" y="150" width="300" height="66" rx="10" fill="#ffffff" stroke="#0b7a4b" stroke-width="2.5"/>
+  <text x="520" y="180" font-size="15" font-weight="700" fill="#0b7a4b">midi_ev { time, data, len }</text>
+  <text x="520" y="202" font-size="13.5" fill="#333333">copied in, never mutated</text>
+  <rect x="920" y="150" width="300" height="66" rx="10" fill="#ffffff" stroke="#0b7a4b" stroke-width="2.5"/>
+  <text x="940" y="180" font-size="15" font-weight="700" fill="#0b7a4b">planar float out[ ]</text>
+  <text x="940" y="202" font-size="13.5" fill="#333333">produced, then handed off</text>
+  <text x="80" y="244" font-size="14" fill="#0b7a4b" font-style="italic">just data — loggable · replayable · testable · owned by no one</text>
+
+  <!-- IDENTITY OVER TIME -->
+  <line x1="50" y1="270" x2="1280" y2="270" stroke="#d0d4da" stroke-width="1.5"/>
+  <text x="50" y="298" font-size="17" font-weight="700" fill="#7a3e9d">IDENTITY over TIME — "last-note priority", re-read</text>
+
+  <g font-size="13">
+    <rect x="96" y="322" width="190" height="80" rx="10" fill="#ffffff" stroke="#7a3e9d" stroke-width="2"/>
+    <text x="112" y="346" font-weight="700" fill="#7a3e9d">V0 (initial)</text>
+    <text x="112" y="368" fill="#222222">stack [ ]</text>
+    <text x="112" y="388" fill="#222222">last 60 · gate low</text>
+
+    <rect x="328" y="322" width="190" height="80" rx="10" fill="#ffffff" stroke="#7a3e9d" stroke-width="2"/>
+    <text x="344" y="346" font-weight="700" fill="#7a3e9d">V1</text>
+    <text x="344" y="368" fill="#222222">stack [64]</text>
+    <text x="344" y="388" fill="#222222">last 64 · gate high</text>
+
+    <rect x="560" y="322" width="190" height="80" rx="10" fill="#ffffff" stroke="#7a3e9d" stroke-width="2.5"/>
+    <text x="576" y="346" font-weight="700" fill="#7a3e9d">V2</text>
+    <text x="576" y="368" fill="#222222">stack [64, 67]</text>
+    <text x="576" y="388" fill="#222222">last 67 ← newest wins</text>
+
+    <rect x="792" y="322" width="190" height="80" rx="10" fill="#ffffff" stroke="#7a3e9d" stroke-width="2"/>
+    <text x="808" y="346" font-weight="700" fill="#7a3e9d">V3</text>
+    <text x="808" y="368" fill="#222222">stack [64]</text>
+    <text x="808" y="388" fill="#222222">last 64 (67 released)</text>
+
+    <rect x="1024" y="322" width="200" height="80" rx="10" fill="#ffffff" stroke="#7a3e9d" stroke-width="2"/>
+    <text x="1040" y="346" font-weight="700" fill="#7a3e9d">V4</text>
+    <text x="1040" y="368" fill="#222222">stack [ ]</text>
+    <text x="1040" y="388" fill="#222222">last 64 held · gate low</text>
+  </g>
+
+  <text x="50" y="462" font-size="14" font-weight="700" fill="#333333">state[ch 1]</text>
+  <text x="50" y="480" font-size="12.5" fill="#666666">the identity</text>
+  <line x1="150" y1="456" x2="1240" y2="456" stroke="#333333" stroke-width="2.4" marker-end="url(#ar)"/>
+  <text x="1210" y="446" font-size="13" fill="#444444">time →</text>
+
+  <g stroke="#c04a00" stroke-width="2.4"><line x1="320" y1="440" x2="320" y2="472"/><line x1="552" y1="440" x2="552" y2="472"/><line x1="784" y1="440" x2="784" y2="472"/><line x1="1016" y1="440" x2="1016" y2="472"/></g>
+  <g fill="#c04a00"><circle cx="320" cy="456" r="4.5"/><circle cx="552" cy="456" r="4.5"/><circle cx="784" cy="456" r="4.5"/><circle cx="1016" cy="456" r="4.5"/></g>
+  <g font-size="13" fill="#c04a00" text-anchor="middle" font-weight="700">
+    <text x="320" y="496">note_on 64</text><text x="552" y="496">note_on 67</text><text x="784" y="496">note_off 67</text><text x="1016" y="496">note_off 64</text>
+  </g>
+  <g stroke="#7a3e9d" stroke-width="1.6" stroke-dasharray="4 4" fill="none">
+    <path d="M320,440 C360,424 400,414 423,404" marker-end="url(#arP)"/>
+    <path d="M552,440 C600,424 630,414 655,404" marker-end="url(#arP)"/>
+    <path d="M784,440 C830,424 860,414 887,404" marker-end="url(#arP)"/>
+    <path d="M1016,440 C1070,424 1100,414 1124,404" marker-end="url(#arP)"/>
+  </g>
+  <text x="150" y="534" font-size="14" fill="#7a3e9d">the channel (identity) persists; every event yields a new value of its state. "newest wins" = current value is the top of the stack.</text>
+
+  <!-- PLACE -->
+  <line x1="50" y1="566" x2="1280" y2="566" stroke="#d0d4da" stroke-width="1.5"/>
+  <text x="50" y="594" font-size="17" font-weight="700" fill="#c04a00">PLACE — mutation, on purpose</text>
+
+  <g font-size="13">
+    <rect x="80" y="614" width="280" height="116" rx="10" fill="#ffffff" stroke="#c04a00" stroke-width="2.5"/>
+    <text x="100" y="642" font-size="14.5" font-weight="700" fill="#c04a00">state[16]</text>
+    <text x="100" y="668" fill="#222222">array of mchan,</text>
+    <text x="100" y="688" fill="#222222">overwritten as events</text>
+    <text x="100" y="708" fill="#222222">arrive in the block</text>
+
+    <rect x="385" y="614" width="280" height="116" rx="10" fill="#ffffff" stroke="#c04a00" stroke-width="2.5"/>
+    <text x="405" y="642" font-size="14.5" font-weight="700" fill="#c04a00">cv[i].u.glide.current</text>
+    <text x="405" y="668" fill="#222222">slew position,</text>
+    <text x="405" y="688" fill="#222222">stepped once per frame</text>
+
+    <rect x="690" y="614" width="280" height="116" rx="10" fill="#ffffff" stroke="#c04a00" stroke-width="2.5"/>
+    <text x="710" y="642" font-size="14.5" font-weight="700" fill="#c04a00">clk.tick</text>
+    <text x="710" y="668" fill="#222222">clock counter,</text>
+    <text x="710" y="688" fill="#222222">++ on every 0xF8</text>
+
+    <rect x="995" y="614" width="280" height="116" rx="10" fill="#ffffff" stroke="#c04a00" stroke-width="2.5"/>
+    <text x="1015" y="642" font-size="14.5" font-weight="700" fill="#c04a00">outs[i][ ]</text>
+    <text x="1015" y="668" fill="#222222">output buffers,</text>
+    <text x="1015" y="688" fill="#222222">filled in place each block</text>
+  </g>
+
+  <text x="50" y="772" font-size="15" fill="#222222">In the audio thread we overwrite in place: <tspan font-weight="700" fill="#c04a00">no allocation, lock-free, real-time safe</tspan>. Place is the <tspan font-style="italic">mechanism</tspan>;</text>
+  <text x="50" y="796" font-size="15" fill="#222222">the value-over-time picture above is the <tspan font-style="italic">meaning</tspan>. Knowing which is which is the whole game.</text>
+</svg>

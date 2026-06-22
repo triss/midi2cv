@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1340 780" font-family="'Segoe UI', Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="ar" markerWidth="12" markerHeight="12" refX="8" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#333333"/>
+    </marker>
+  </defs>
+  <rect width="1340" height="780" fill="#ffffff"/>
+  <text x="50" y="56" font-size="29" font-weight="700" fill="#111111">Turing · the engine is a little machine with a tape</text>
+  <text x="50" y="86" font-size="16" fill="#444444">A tape, a head, a state register, a table of rules. engine_run reads the MIDI tape, changes state, and writes the voltage tape.</text>
+
+  <!-- ===== INPUT TAPE ===== -->
+  <text x="50" y="128" font-size="16" font-weight="700" fill="#111111">INPUT TAPE — the MIDI event stream (one cell per frame)</text>
+
+  <!-- head -->
+  <path d="M695,112 L713,112 L704,138 Z" fill="#c04a00"/>
+  <text x="730" y="128" font-size="14" font-weight="700" fill="#c04a00">head = cursor</text>
+
+  <g font-size="13.5" text-anchor="middle">
+    <!-- plain + event cells -->
+    <rect x="90"  y="142" width="110" height="62" fill="#ffffff" stroke="#0061a8" stroke-width="2"/><text x="145"  y="180" fill="#999999">·</text>
+    <rect x="200" y="142" width="110" height="62" fill="#ffffff" stroke="#0061a8" stroke-width="2"/><text x="255"  y="180" fill="#999999">·</text>
+    <rect x="310" y="142" width="110" height="62" fill="#fdecdf" stroke="#c04a00" stroke-width="2"/><text x="365"  y="179" fill="#111111" font-weight="700">on 64</text>
+    <rect x="420" y="142" width="110" height="62" fill="#ffffff" stroke="#0061a8" stroke-width="2"/><text x="475"  y="180" fill="#999999">·</text>
+    <rect x="530" y="142" width="110" height="62" fill="#fdecdf" stroke="#c04a00" stroke-width="2"/><text x="585"  y="179" fill="#111111" font-weight="700">0xF8</text>
+    <rect x="640" y="142" width="110" height="62" fill="#ffffff" stroke="#0061a8" stroke-width="2.5"/><text x="695" y="180" fill="#999999">·</text>
+    <rect x="750" y="142" width="110" height="62" fill="#fdecdf" stroke="#c04a00" stroke-width="2"/><text x="805"  y="179" fill="#111111" font-weight="700">off 64</text>
+    <rect x="860" y="142" width="110" height="62" fill="#ffffff" stroke="#0061a8" stroke-width="2"/><text x="915"  y="180" fill="#999999">·</text>
+    <rect x="970" y="142" width="110" height="62" fill="#fdecdf" stroke="#c04a00" stroke-width="2"/><text x="1025" y="179" fill="#111111" font-weight="700">CC 1</text>
+    <rect x="1080" y="142" width="110" height="62" fill="#ffffff" stroke="#0061a8" stroke-width="2"/><text x="1135" y="180" fill="#999999">·</text>
+  </g>
+  <g font-size="12.5" fill="#777777" text-anchor="middle">
+    <text x="145" y="224">0</text><text x="255" y="224">…</text><text x="365" y="224">frame 96</text><text x="475" y="224">…</text>
+    <text x="585" y="224">frame 192</text><text x="695" y="224">…</text><text x="805" y="224">frame 240</text><text x="1025" y="224">frame 300</text>
+  </g>
+
+  <line x1="695" y1="206" x2="695" y2="296" stroke="#333333" stroke-width="2.4" marker-end="url(#ar)"/>
+  <text x="708" y="258" font-size="14" font-weight="700" fill="#333333">1 · read</text>
+
+  <!-- ===== STATE ===== -->
+  <rect x="90" y="300" width="520" height="166" rx="12" fill="#ffffff" stroke="#0b7a4b" stroke-width="2.5"/>
+  <text x="112" y="332" font-size="17" font-weight="700" fill="#0b7a4b">STATE — the machine's memory</text>
+  <text x="112" y="364" font-size="14.5" fill="#333333">mchan : note-stack · last_note · velocity · cc[ ]</text>
+  <text x="112" y="392" font-size="14.5" fill="#333333">clk : tick · running</text>
+  <text x="112" y="428" font-size="14" fill="#555555">A fixed register — no allocation, the same</text>
+  <text x="112" y="448" font-size="14" fill="#555555">storage reused every block.</text>
+
+  <!-- ===== RULES ===== -->
+  <rect x="690" y="300" width="560" height="166" rx="12" fill="#ffffff" stroke="#7a3e9d" stroke-width="2.5"/>
+  <text x="712" y="332" font-size="17" font-weight="700" fill="#7a3e9d">TRANSITION RULES — what engine_run follows</text>
+  <text x="712" y="364" font-size="14.5" fill="#333333">• gap before next event → write the current value</text>
+  <text x="712" y="392" font-size="14.5" fill="#333333">• note on / off → update the note-stack</text>
+  <text x="712" y="420" font-size="14.5" fill="#333333">• 0xF8 clock → tick++, maybe start a pulse</text>
+  <text x="712" y="448" font-size="14.5" fill="#333333">• then step the head one frame right</text>
+
+  <line x1="695" y1="466" x2="695" y2="556" stroke="#333333" stroke-width="2.4" marker-end="url(#ar)"/>
+  <text x="708" y="516" font-size="14" font-weight="700" fill="#333333">2 · write</text>
+
+  <!-- step-right arrow -->
+  <path d="M860,173 C940,173 960,173 1010,173" fill="none" stroke="#c04a00" stroke-width="2.2" stroke-dasharray="5 5" marker-end="url(#ar)"/>
+  <text x="935" y="163" font-size="13.5" font-weight="700" fill="#c04a00" text-anchor="middle">3 · step right</text>
+
+  <!-- ===== OUTPUT TAPE ===== -->
+  <text x="50" y="552" font-size="16" font-weight="700" fill="#111111">OUTPUT TAPE — CV samples written (one per frame)</text>
+  <g>
+    <rect x="90" y="566" width="1100" height="62" fill="#ffffff" stroke="#0061a8" stroke-width="2"/>
+    <g stroke="#cfd6e0" stroke-width="1">
+      <line x1="200" y1="566" x2="200" y2="628"/><line x1="310" y1="566" x2="310" y2="628"/><line x1="420" y1="566" x2="420" y2="628"/>
+      <line x1="530" y1="566" x2="530" y2="628"/><line x1="640" y1="566" x2="640" y2="628"/><line x1="750" y1="566" x2="750" y2="628"/>
+      <line x1="860" y1="566" x2="860" y2="628"/><line x1="970" y1="566" x2="970" y2="628"/><line x1="1080" y1="566" x2="1080" y2="628"/>
+    </g>
+    <!-- the written CV: low, then steps up at on64, holds, drops at off64 -->
+    <polyline points="90,612 310,612 310,584 750,584 750,612 1190,612" fill="none" stroke="#7a3e9d" stroke-width="3"/>
+  </g>
+
+  <text x="50" y="684" font-size="15.5" fill="#222222">Read a symbol, consult the state and the rules, write a symbol, step right.</text>
+  <text x="50" y="710" font-size="15.5" fill="#222222">That loop is the whole engine — and, near enough, the whole of computation.</text>
+</svg>

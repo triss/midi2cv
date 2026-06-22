@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1340 900" font-family="'Segoe UI', Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="ar" markerWidth="12" markerHeight="12" refX="8" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#333333"/>
+    </marker>
+    <marker id="arO" markerWidth="12" markerHeight="12" refX="8" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#c04a00"/>
+    </marker>
+  </defs>
+  <rect width="1340" height="900" fill="#ffffff"/>
+  <text x="50" y="56" font-size="28" font-weight="700" fill="#111111">Kay · systems of systems</text>
+  <text x="50" y="86" font-size="16" fill="#444444">An object is a whole computer. Zoom out and the pattern repeats — messages in · local state · messages out — all the way up.</text>
+
+  <!-- L3 rig -->
+  <rect x="60" y="112" width="1220" height="752" rx="20" fill="#ffffff" stroke="#0061a8" stroke-width="2"/>
+  <text x="86" y="146" font-size="17" font-weight="700" fill="#0061a8">the rig — one big feedback loop (the organism)</text>
+
+  <!-- L2 program -->
+  <rect x="300" y="178" width="700" height="404" rx="16" fill="#ffffff" stroke="#7a3e9d" stroke-width="2"/>
+  <text x="324" y="210" font-size="16" font-weight="700" fill="#7a3e9d">midi2cv — the program · a cell</text>
+  <text x="324" y="232" font-size="13.5" fill="#555555">cli + adapter + config + engine</text>
+
+  <!-- L1 engine -->
+  <rect x="372" y="254" width="556" height="262" rx="14" fill="#ffffff" stroke="#7a3e9d" stroke-width="2"/>
+  <text x="396" y="286" font-size="15" font-weight="700" fill="#7a3e9d">engine — a cell of cells</text>
+  <text x="396" y="306" font-size="13.5" fill="#555555">cvslot colony + shared channel state</text>
+
+  <!-- L0 cvslot -->
+  <rect x="446" y="330" width="408" height="158" rx="12" fill="#ffffff" stroke="#c04a00" stroke-width="2.5"/>
+  <text x="470" y="362" font-size="15" font-weight="700" fill="#c04a00">cvslot — a whole little machine</text>
+  <text x="470" y="386" font-size="13.5" fill="#222222">config + private state (u) + a render behaviour</text>
+  <line x1="470" y1="430" x2="516" y2="430" stroke="#333333" stroke-width="2" marker-end="url(#ar)"/>
+  <rect x="522" y="414" width="92" height="32" rx="7" fill="#fdf3ee" stroke="#c04a00" stroke-width="1.4"/>
+  <text x="568" y="435" font-size="12.5" fill="#222222" text-anchor="middle">state</text>
+  <line x1="620" y1="430" x2="666" y2="430" stroke="#333333" stroke-width="2" marker-end="url(#ar)"/>
+  <text x="470" y="468" font-size="12.5" fill="#c04a00">render(in) ▷ step state ▷ samples(out)</text>
+
+  <!-- recursion callout -->
+  <rect x="1028" y="210" width="226" height="184" rx="12" fill="#f5f6f8" stroke="#c4c9d2" stroke-width="1.5"/>
+  <text x="1046" y="240" font-size="15" font-weight="700" fill="#111111">the recursion</text>
+  <text x="1046" y="266" font-size="13" fill="#444444">every frame is a computer:</text>
+  <text x="1046" y="290" font-size="13" fill="#0061a8">▷ messages in</text>
+  <text x="1046" y="312" font-size="13" fill="#c04a00">◻ local state</text>
+  <text x="1046" y="334" font-size="13" fill="#7a3e9d">▷ messages out</text>
+  <text x="1046" y="362" font-size="12.5" fill="#555555">same at every zoom —</text>
+  <text x="1046" y="380" font-size="12.5" fill="#555555">the rig is just the next frame.</text>
+
+  <!-- rig chain -->
+  <g>
+    <rect x="96" y="636" width="166" height="70" rx="12" fill="#ffffff" stroke="#0b7a4b" stroke-width="2.5"/>
+    <text x="179" y="668" font-size="14" font-weight="700" fill="#0b7a4b" text-anchor="middle">MIDI controller</text>
+    <text x="179" y="689" font-size="12.5" fill="#333333" text-anchor="middle">keys · knobs</text>
+
+    <rect x="338" y="636" width="166" height="70" rx="12" fill="#ffffff" stroke="#7a3e9d" stroke-width="2.5"/>
+    <text x="421" y="668" font-size="14" font-weight="700" fill="#7a3e9d" text-anchor="middle">midi2cv</text>
+    <text x="421" y="689" font-size="12.5" fill="#333333" text-anchor="middle">↑ the nest above</text>
+
+    <rect x="580" y="636" width="166" height="70" rx="12" fill="#ffffff" stroke="#c04a00" stroke-width="2.5"/>
+    <text x="663" y="668" font-size="14" font-weight="700" fill="#c04a00" text-anchor="middle">soundcard → ES-3</text>
+    <text x="663" y="689" font-size="12.5" fill="#333333" text-anchor="middle">DC → control voltage</text>
+
+    <rect x="822" y="636" width="166" height="70" rx="12" fill="#ffffff" stroke="#0061a8" stroke-width="2.5"/>
+    <text x="905" y="668" font-size="14" font-weight="700" fill="#0061a8" text-anchor="middle">modular synth</text>
+    <text x="905" y="689" font-size="12.5" fill="#333333" text-anchor="middle">VCOs · filters</text>
+
+    <rect x="1064" y="636" width="166" height="70" rx="12" fill="#ffffff" stroke="#0b7a4b" stroke-width="2.5"/>
+    <text x="1147" y="668" font-size="14" font-weight="700" fill="#0b7a4b" text-anchor="middle">the musician</text>
+    <text x="1147" y="689" font-size="12.5" fill="#333333" text-anchor="middle">ears · hands</text>
+  </g>
+  <g stroke="#333333" stroke-width="2.2" fill="none">
+    <path d="M262,671 L336,671" marker-end="url(#ar)"/>
+    <path d="M504,671 L578,671" marker-end="url(#ar)"/>
+    <path d="M746,671 L820,671" marker-end="url(#ar)"/>
+    <path d="M988,671 L1062,671" marker-end="url(#ar)"/>
+  </g>
+  <g font-size="11.5" fill="#666666" text-anchor="middle">
+    <text x="299" y="662">MIDI</text><text x="541" y="662">CV</text><text x="783" y="662">sound</text><text x="1025" y="662">vibes</text>
+  </g>
+
+  <path d="M1147,706 C1147,808 1147,824 980,824 L360,824 C190,824 179,808 179,708" fill="none" stroke="#c04a00" stroke-width="2.4" stroke-dasharray="3 6" marker-end="url(#arO)"/>
+  <text x="660" y="850" font-size="14" fill="#c04a00" text-anchor="middle" font-style="italic">you hear it, you play again — the loop closes, and the whole organism is itself just one cell in something larger</text>
+</svg>

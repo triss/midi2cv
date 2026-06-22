@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1340 800" font-family="'Segoe UI', Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="dot" markerWidth="9" markerHeight="9" refX="4" refY="4" orient="auto">
+      <circle cx="4" cy="4" r="3" fill="#c04a00"/>
+    </marker>
+  </defs>
+  <rect width="1340" height="800" fill="#ffffff"/>
+  <text x="50" y="56" font-size="29" font-weight="700" fill="#111111">Hickey · simple, not easy</text>
+  <text x="50" y="86" font-size="16" fill="#444444"><tspan font-style="italic">complect</tspan> (v.): to braid together. Simple = one role per strand — so you can pull one thread without the rest.</text>
+
+  <!-- LEFT: decomplected -->
+  <text x="50" y="138" font-size="18" font-weight="700" fill="#0b7a4b">DECOMPLECTED — how midi2cv is built</text>
+  <text x="50" y="162" font-size="14" fill="#555555">five concerns, five strands, side by side</text>
+
+  <g stroke-linecap="round" fill="none" stroke-width="11">
+    <line x1="80" y1="222" x2="610" y2="222" stroke="#0061a8"/>
+    <line x1="80" y1="288" x2="610" y2="288" stroke="#7a3e9d"/>
+    <line x1="80" y1="354" x2="610" y2="354" stroke="#0b7a4b"/>
+    <line x1="80" y1="420" x2="610" y2="420" stroke="#c04a00"/>
+    <line x1="80" y1="486" x2="610" y2="486" stroke="#555555"/>
+  </g>
+  <g font-size="14.5" fill="#222222">
+    <text x="80" y="210">decode MIDI <tspan fill="#666666">— bytes → midi_ev  (jack.c)</tspan></text>
+    <text x="80" y="276">musical logic <tspan fill="#666666">— notes · clock · render  (engine.c)</tspan></text>
+    <text x="80" y="342">backend I/O <tspan fill="#666666">— JACK client · ports  (jack.c)</tspan></text>
+    <text x="80" y="408">parse config <tspan fill="#666666">— text → a value  (config.c)</tspan></text>
+    <text x="80" y="474">argv &amp; lifecycle <tspan fill="#666666">— main · run loop  (cli.c)</tspan></text>
+  </g>
+
+  <rect x="80" y="536" width="530" height="104" rx="11" fill="#eaf5ef" stroke="#0b7a4b" stroke-width="2"/>
+  <text x="100" y="566" font-size="15" font-weight="700" fill="#0b7a4b">a seam is a decision NOT to braid</text>
+  <text x="100" y="592" font-size="14" fill="#222222">engine.h &amp; backend.h hold the strands apart:</text>
+  <text x="100" y="614" font-size="14" fill="#222222">the engine builds and is tested with no JACK in sight.</text>
+
+  <!-- RIGHT: complected -->
+  <text x="700" y="138" font-size="18" font-weight="700" fill="#c04a00">COMPLECTED — the tangle we refused</text>
+  <text x="700" y="162" font-size="14" fill="#555555">same five concerns, braided into one knot</text>
+
+  <rect x="700" y="196" width="580" height="300" rx="14" fill="#fdf3ee" stroke="#e7cab9" stroke-width="1.5"/>
+  <g stroke-linecap="round" fill="none" stroke-width="6">
+    <path d="M732,346 C812,266 892,426 972,346 C1052,266 1142,426 1248,346" stroke="#0061a8"/>
+    <path d="M732,316 C822,446 902,236 982,381 C1062,456 1142,246 1248,326" stroke="#7a3e9d"/>
+    <path d="M732,381 C817,246 897,456 977,316 C1057,236 1142,446 1248,371" stroke="#0b7a4b"/>
+    <path d="M732,286 C837,436 907,256 987,411 C1067,286 1147,436 1248,296" stroke="#c04a00"/>
+    <path d="M732,411 C812,286 897,456 972,286 C1052,436 1137,276 1248,411" stroke="#555555"/>
+  </g>
+
+  <g font-size="12.5">
+    <rect x="700" y="200" width="234" height="28" rx="7" fill="#ffffff" stroke="#c04a00" stroke-width="1.6"/>
+    <text x="714" y="219" fill="#222222">engine #include &lt;jack/jack.h&gt;</text>
+    <line x1="845" y1="228" x2="900" y2="290" stroke="#c04a00" stroke-width="1.4" stroke-dasharray="3 3" marker-end="url(#dot)"/>
+
+    <rect x="1046" y="200" width="234" height="28" rx="7" fill="#ffffff" stroke="#c04a00" stroke-width="1.6"/>
+    <text x="1060" y="219" fill="#222222">parse in the process() callback</text>
+    <line x1="1120" y1="228" x2="1050" y2="306" stroke="#c04a00" stroke-width="1.4" stroke-dasharray="3 3" marker-end="url(#dot)"/>
+
+    <rect x="700" y="464" width="256" height="28" rx="7" fill="#ffffff" stroke="#c04a00" stroke-width="1.6"/>
+    <text x="714" y="483" fill="#222222">cvout_sample switch in every renderer</text>
+    <line x1="845" y1="464" x2="940" y2="396" stroke="#c04a00" stroke-width="1.4" stroke-dasharray="3 3" marker-end="url(#dot)"/>
+
+    <rect x="1058" y="464" width="222" height="28" rx="7" fill="#ffffff" stroke="#c04a00" stroke-width="1.6"/>
+    <text x="1072" y="483" fill="#222222">cli + backend in one main()</text>
+    <line x1="1130" y1="464" x2="1070" y2="396" stroke="#c04a00" stroke-width="1.4" stroke-dasharray="3 3" marker-end="url(#dot)"/>
+  </g>
+
+  <text x="700" y="536" font-size="14.5" fill="#9a3c00" font-style="italic">Easy on day one — fewer files, less ceremony.</text>
+  <text x="700" y="560" font-size="14.5" fill="#9a3c00" font-style="italic">Then you cannot move one thread without dragging the other four.</text>
+
+  <text x="50" y="704" font-size="15" fill="#222222">The recent work was all <tspan font-weight="700" fill="#0b7a4b">decomplecting</tspan>: split cli.c from jack.c · render fns separated from value-mapping · per-output</text>
+  <text x="50" y="728" font-size="15" fill="#222222">runtime state pulled out of channel state. None made the program <tspan font-style="italic">easier to write</tspan> — it made it <tspan font-weight="700" fill="#0b7a4b">simpler to hold</tspan>.</text>
+</svg>

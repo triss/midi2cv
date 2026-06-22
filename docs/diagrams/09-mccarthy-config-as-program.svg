@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1340 760" font-family="'Segoe UI', Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="ar" markerWidth="12" markerHeight="12" refX="8" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#333333"/>
+    </marker>
+  </defs>
+  <rect width="1340" height="760" fill="#ffffff"/>
+  <text x="50" y="56" font-size="29" font-weight="700" fill="#111111">McCarthy · the config is a program; the engine is its interpreter</text>
+  <text x="50" y="86" font-size="16" fill="#444444">engine_init <tspan font-weight="700">evaluates</tspan> the config into runnable form; engine_run <tspan font-weight="700">applies</tspan> it to the MIDI stream. Eval / apply, in C.</text>
+
+  <!-- DATA -->
+  <rect x="50" y="130" width="370" height="210" rx="12" fill="#ffffff" stroke="#0b7a4b" stroke-width="2.5"/>
+  <text x="70" y="162" font-size="17" font-weight="700" fill="#0b7a4b">1 · DATA — the config</text>
+  <text x="70" y="190" font-size="14.5" fill="#333333">pitch1 pitch 1 - 0.0083 0.0 40</text>
+  <text x="70" y="222" font-size="14" fill="#555555">read as a value, this is just a list:</text>
+  <text x="70" y="250" font-size="14.5" fill="#111111">(cvout :name pitch1 :src pitch</text>
+  <text x="70" y="272" font-size="14.5" fill="#111111">       :ch 1 :scale 0.0083 :glide 40)</text>
+  <text x="70" y="308" font-size="14" fill="#333333">A declarative description —</text>
+  <text x="70" y="328" font-size="14" fill="#333333">what you want, not steps to do.</text>
+
+  <!-- EVAL -->
+  <rect x="485" y="130" width="370" height="210" rx="12" fill="#ffffff" stroke="#7a3e9d" stroke-width="2.5"/>
+  <text x="505" y="162" font-size="17" font-weight="700" fill="#7a3e9d">2 · EVAL — engine_init</text>
+  <text x="505" y="192" font-size="14.5" fill="#333333">Reads the data; for each cvout,</text>
+  <text x="505" y="214" font-size="14.5" fill="#333333">binds a render behaviour + state.</text>
+  <text x="505" y="248" font-size="14.5" fill="#111111">glide &gt; 0 ? render_glide</text>
+  <text x="505" y="270" font-size="14.5" fill="#111111">          : render_const</text>
+  <text x="505" y="304" font-size="14" fill="#333333">→ builds cv[ ] : the runnable</text>
+  <text x="505" y="324" font-size="14" fill="#333333">form. Data ⟶ something callable.</text>
+
+  <!-- APPLY -->
+  <rect x="920" y="130" width="370" height="210" rx="12" fill="#ffffff" stroke="#0061a8" stroke-width="2.5"/>
+  <text x="940" y="162" font-size="17" font-weight="700" fill="#0061a8">3 · APPLY — engine_run</text>
+  <text x="940" y="192" font-size="14.5" fill="#333333">Applies the runnable form to</text>
+  <text x="940" y="214" font-size="14.5" fill="#333333">each block of MIDI events,</text>
+  <text x="940" y="236" font-size="14.5" fill="#333333">against the environment state[ ].</text>
+  <text x="940" y="270" font-size="14.5" fill="#111111">for ev: update env;</text>
+  <text x="940" y="292" font-size="14.5" fill="#111111">        fill_segment ▶ render</text>
+  <text x="940" y="326" font-size="14" fill="#333333">form ⊗ input ⟶ CV samples.</text>
+
+  <!-- arrows -->
+  <line x1="424" y1="235" x2="481" y2="235" stroke="#333333" stroke-width="2.4" marker-end="url(#ar)"/>
+  <text x="452" y="226" font-size="13" font-weight="700" fill="#333333" text-anchor="middle">eval</text>
+  <line x1="859" y1="235" x2="916" y2="235" stroke="#333333" stroke-width="2.4" marker-end="url(#ar)"/>
+  <text x="887" y="226" font-size="13" font-weight="700" fill="#333333" text-anchor="middle">apply</text>
+
+  <!-- ===== three notes ===== -->
+  <rect x="50" y="390" width="395" height="240" rx="12" fill="#f5f6f8" stroke="#c4c9d2" stroke-width="1.5"/>
+  <text x="72" y="424" font-size="16" font-weight="700" fill="#111111">The universal function</text>
+  <text x="72" y="456" font-size="14.5" fill="#333333">EVAL: form ⟸ data</text>
+  <text x="290" y="456" font-size="13.5" fill="#7a3e9d">(engine_init)</text>
+  <text x="72" y="482" font-size="14.5" fill="#333333">APPLY: form ⊗ input ⟶ out</text>
+  <text x="320" y="482" font-size="13.5" fill="#0061a8">(engine_run)</text>
+  <text x="72" y="520" font-size="14" fill="#444444">The program splits along the same</text>
+  <text x="72" y="540" font-size="14" fill="#444444">seam McCarthy split his interpreter:</text>
+  <text x="72" y="560" font-size="14" fill="#444444">describe with data, run with an</text>
+  <text x="72" y="580" font-size="14" fill="#444444">interpreter, meet at eval / apply.</text>
+
+  <rect x="472" y="390" width="395" height="240" rx="12" fill="#f5f6f8" stroke="#c4c9d2" stroke-width="1.5"/>
+  <text x="494" y="424" font-size="16" font-weight="700" fill="#111111">The invention he'd notice missing</text>
+  <text x="494" y="456" font-size="14" fill="#333333">McCarthy gave us garbage</text>
+  <text x="494" y="476" font-size="14" fill="#333333">collection (1959).</text>
+  <text x="494" y="508" font-size="14" fill="#333333">In the audio thread it is pointedly</text>
+  <text x="494" y="528" font-size="14" fill="#333333">absent: fixed arrays, zero allocation,</text>
+  <text x="494" y="548" font-size="14" fill="#333333">lock-free — nothing to collect.</text>
+  <text x="494" y="584" font-size="14" fill="#444444" font-style="italic">A deliberate place to refuse his gift.</text>
+
+  <rect x="894" y="390" width="396" height="240" rx="12" fill="#f5f6f8" stroke="#c4c9d2" stroke-width="1.5"/>
+  <text x="916" y="424" font-size="16" font-weight="700" fill="#111111">What, not how</text>
+  <text x="916" y="456" font-size="14" fill="#333333">The config states what each output</text>
+  <text x="916" y="476" font-size="14" fill="#333333">IS; the engine decides how to make it.</text>
+  <text x="916" y="508" font-size="14" fill="#333333">That is Advice Taker energy: state</text>
+  <text x="916" y="528" font-size="14" fill="#333333">the goal, let the system find the steps.</text>
+  <text x="916" y="564" font-size="14" fill="#444444" font-style="italic">And yes — the config could simply</text>
+  <text x="916" y="584" font-size="14" fill="#444444" font-style="italic">be S-expressions.</text>
+
+  <text x="50" y="678" font-size="15.5" fill="#222222">Lisp's lesson, in ~800 lines of C: keep the <tspan font-weight="700">description (data)</tspan> apart from the <tspan font-weight="700">interpreter (engine)</tspan>, and let them meet only at eval / apply.</text>
+</svg>

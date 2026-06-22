@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1340 880" font-family="'Segoe UI', Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="ar" markerWidth="12" markerHeight="12" refX="8" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#333333"/>
+    </marker>
+    <marker id="arL" markerWidth="11" markerHeight="11" refX="7" refY="5" orient="auto">
+      <path d="M0,0 L9,5 L0,9 Z" fill="#888888"/>
+    </marker>
+  </defs>
+  <rect width="1340" height="880" fill="#ffffff"/>
+  <text x="50" y="56" font-size="29" font-weight="700" fill="#111111">midi2cv · the object model</text>
+  <text x="50" y="86" font-size="16" fill="#444444">Modules (solid borders) own the data (dashed borders). Dotted lines are porting seams — no foreign types cross them.</text>
+
+  <!-- seams -->
+  <line x1="430" y1="150" x2="430" y2="540" stroke="#777777" stroke-width="2.5" stroke-dasharray="2 7"/>
+  <line x1="900" y1="150" x2="900" y2="540" stroke="#777777" stroke-width="2.5" stroke-dasharray="2 7"/>
+  <text x="430" y="140" font-size="14" font-weight="700" fill="#555555" text-anchor="middle">backend.h seam</text>
+  <text x="900" y="140" font-size="14" font-weight="700" fill="#555555" text-anchor="middle">engine.h seam</text>
+
+  <!-- modules -->
+  <rect x="50" y="156" width="320" height="150" rx="11" fill="#ffffff" stroke="#c04a00" stroke-width="2.5"/>
+  <text x="70" y="186" font-size="18" font-weight="700" fill="#c04a00">cli.c</text>
+  <text x="70" y="208" font-size="13.5" fill="#666666">the program shell</text>
+  <text x="70" y="234" font-size="14.5" fill="#222222">main() · usage()</text>
+  <text x="70" y="258" font-size="14.5" fill="#222222">parse argv → config + test_req</text>
+  <text x="70" y="282" font-size="14.5" fill="#222222">calls config_load, backend_run</text>
+
+  <rect x="510" y="156" width="320" height="170" rx="11" fill="#ffffff" stroke="#0061a8" stroke-width="2.5"/>
+  <text x="530" y="186" font-size="18" font-weight="700" fill="#0061a8">jack.c</text>
+  <text x="530" y="208" font-size="13.5" fill="#666666">the JACK backend adapter</text>
+  <text x="530" y="234" font-size="14.5" fill="#222222">backend_run() · setup_jack()</text>
+  <text x="530" y="258" font-size="14.5" fill="#222222">process() — audio callback</text>
+  <text x="530" y="282" font-size="14.5" fill="#222222">owns client · ports[] · midi_in</text>
+  <text x="530" y="306" font-size="13.5" fill="#0061a8">swap this file to port elsewhere</text>
+
+  <rect x="970" y="156" width="310" height="190" rx="11" fill="#ffffff" stroke="#7a3e9d" stroke-width="2.5"/>
+  <text x="990" y="186" font-size="18" font-weight="700" fill="#7a3e9d">engine.c</text>
+  <text x="990" y="208" font-size="13.5" fill="#666666">the MIDI→CV core (no JACK)</text>
+  <text x="990" y="234" font-size="14.5" fill="#222222">engine_init() · engine_run()</text>
+  <text x="990" y="258" font-size="14.5" fill="#222222">owns cv[] · state[16] · clk</text>
+  <text x="990" y="282" font-size="14.5" fill="#222222">note stack · sample mapping</text>
+  <text x="990" y="306" font-size="14.5" fill="#222222">clock transport · render fns</text>
+  <text x="990" y="330" font-size="13.5" fill="#7a3e9d">tested directly, no server</text>
+
+  <rect x="50" y="336" width="320" height="118" rx="11" fill="#ffffff" stroke="#0b7a4b" stroke-width="2.5"/>
+  <text x="70" y="366" font-size="18" font-weight="700" fill="#0b7a4b">config.c</text>
+  <text x="70" y="388" font-size="13.5" fill="#666666">the parser (no JACK)</text>
+  <text x="70" y="414" font-size="14.5" fill="#222222">config_load() · config_parse()</text>
+  <text x="70" y="438" font-size="14.5" fill="#222222">text → a config value</text>
+
+  <!-- connectors -->
+  <line x1="370" y1="220" x2="508" y2="220" stroke="#333333" stroke-width="2.4" marker-end="url(#ar)"/>
+  <text x="439" y="211" font-size="13" fill="#333333" text-anchor="middle">backend_run</text>
+  <line x1="830" y1="232" x2="968" y2="232" stroke="#333333" stroke-width="2.4" marker-end="url(#ar)"/>
+  <text x="899" y="223" font-size="13" fill="#333333" text-anchor="middle">engine_init / run</text>
+  <line x1="140" y1="306" x2="140" y2="334" stroke="#333333" stroke-width="2.4" marker-end="url(#ar)"/>
+  <text x="150" y="326" font-size="13" fill="#333333">config_load</text>
+
+  <!-- legend (in the central gap) -->
+  <rect x="470" y="356" width="350" height="158" rx="11" fill="#f5f6f8" stroke="#c4c9d2" stroke-width="1.5"/>
+  <text x="488" y="384" font-size="15" font-weight="700" fill="#111111">how to read this</text>
+  <rect x="488" y="398" width="32" height="22" rx="5" fill="#ffffff" stroke="#0061a8" stroke-width="2.5"/>
+  <text x="530" y="414" font-size="13.5" fill="#333333">solid = module / process</text>
+  <rect x="488" y="428" width="32" height="22" rx="5" fill="#ffffff" stroke="#7a3e9d" stroke-width="2" stroke-dasharray="6 4"/>
+  <text x="530" y="444" font-size="13.5" fill="#333333">dashed = type / struct</text>
+  <line x1="490" y1="468" x2="520" y2="468" stroke="#777777" stroke-width="2.5" stroke-dasharray="2 6"/>
+  <text x="530" y="473" font-size="13.5" fill="#333333">dotted = porting seam (no types cross)</text>
+  <line x1="490" y1="494" x2="518" y2="494" stroke="#333333" stroke-width="2.4" marker-end="url(#ar)"/>
+  <text x="530" y="499" font-size="13.5" fill="#333333">arrow = calls / hands data to</text>
+
+  <!-- data band -->
+  <line x1="50" y1="544" x2="1280" y2="544" stroke="#d0d4da" stroke-width="1.5"/>
+  <text x="50" y="568" font-size="15" font-weight="700" fill="#666666" letter-spacing="1">THE DATA · types &amp; structs</text>
+
+  <rect x="50" y="584" width="370" height="182" rx="11" fill="#ffffff" stroke="#0b7a4b" stroke-width="2" stroke-dasharray="6 4"/>
+  <text x="70" y="612" font-size="16" font-weight="700" fill="#0b7a4b">config</text>
+  <text x="70" y="634" font-size="13.5" fill="#222222">{ client_name · cvouts[] · ncvouts · connects[] }</text>
+  <line x1="70" y1="648" x2="400" y2="648" stroke="#cdd9d2" stroke-width="1"/>
+  <text x="70" y="674" font-size="16" font-weight="700" fill="#0b7a4b">cvout</text>
+  <text x="70" y="696" font-size="13.5" fill="#222222">{ name · src · midich · param ·</text>
+  <text x="70" y="716" font-size="13.5" fill="#222222">  scale · offset · pulse_ms · glide_ms }</text>
+  <text x="70" y="746" font-size="13" fill="#0b7a4b">one CV output's recipe — flows cli→jack→engine</text>
+
+  <rect x="440" y="584" width="220" height="120" rx="11" fill="#ffffff" stroke="#c04a00" stroke-width="2" stroke-dasharray="6 4"/>
+  <text x="460" y="612" font-size="16" font-weight="700" fill="#c04a00">test_req</text>
+  <text x="460" y="636" font-size="13.5" fill="#222222">{ port · value · active }</text>
+  <text x="460" y="666" font-size="13" fill="#555555">cli builds it,</text>
+  <text x="460" y="685" font-size="13" fill="#555555">jack honours --test</text>
+
+  <rect x="690" y="584" width="220" height="120" rx="11" fill="#ffffff" stroke="#0061a8" stroke-width="2" stroke-dasharray="6 4"/>
+  <text x="710" y="612" font-size="16" font-weight="700" fill="#0061a8">midi_ev</text>
+  <text x="710" y="636" font-size="13.5" fill="#222222">{ time · data[3] · len }</text>
+  <text x="710" y="666" font-size="13" fill="#555555">portable MIDI — the only</text>
+  <text x="710" y="685" font-size="13" fill="#555555">message across engine.h</text>
+
+  <rect x="940" y="584" width="340" height="90" rx="11" fill="#ffffff" stroke="#7a3e9d" stroke-width="2" stroke-dasharray="6 4"/>
+  <text x="960" y="612" font-size="16" font-weight="700" fill="#7a3e9d">source (enum)</text>
+  <text x="960" y="636" font-size="13.5" fill="#222222">PITCH · GATE · TRIG · VEL · CC · CLOCK</text>
+  <text x="960" y="658" font-size="13" fill="#555555">what a CV output reads from MIDI</text>
+
+  <rect x="940" y="686" width="340" height="140" rx="11" fill="#ffffff" stroke="#7a3e9d" stroke-width="2" stroke-dasharray="6 4"/>
+  <text x="960" y="714" font-size="16" font-weight="700" fill="#7a3e9d">cvslot (engine-private)</text>
+  <text x="960" y="738" font-size="13.5" fill="#222222">{ cfg : cvout</text>
+  <text x="960" y="758" font-size="13.5" fill="#222222">  render() : fn pointer</text>
+  <text x="960" y="778" font-size="13.5" fill="#222222">  u : { clock | glide } }</text>
+  <text x="960" y="806" font-size="13" fill="#7a3e9d">one live object per CV output</text>
+
+  <rect x="690" y="724" width="220" height="102" rx="11" fill="#ffffff" stroke="#7a3e9d" stroke-width="2" stroke-dasharray="6 4"/>
+  <text x="710" y="752" font-size="16" font-weight="700" fill="#7a3e9d">mchan</text>
+  <text x="710" y="774" font-size="13" fill="#222222">{ stack[128] · n · last_note ·</text>
+  <text x="710" y="793" font-size="13" fill="#222222">  velocity · cc[128] }</text>
+  <text x="710" y="816" font-size="13" fill="#7a3e9d">per MIDI channel · shared</text>
+
+  <rect x="440" y="724" width="220" height="102" rx="11" fill="#ffffff" stroke="#7a3e9d" stroke-width="2" stroke-dasharray="6 4"/>
+  <text x="460" y="752" font-size="16" font-weight="700" fill="#7a3e9d">clk (transport)</text>
+  <text x="460" y="776" font-size="13.5" fill="#222222">{ running · tick }</text>
+  <text x="460" y="806" font-size="13" fill="#7a3e9d">global MIDI clock</text>
+</svg>
