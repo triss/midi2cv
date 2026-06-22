@@ -23,7 +23,7 @@ static int parse(const char *text, config *cfg)
 	return r;
 }
 
-/* a full config: name, two channel types, a comment, a connect */
+/* a full config: name, two source types, a comment, a connect */
 static void test_full(void)
 {
 	config cfg;
@@ -36,12 +36,12 @@ static void test_full(void)
 
 	CHECK(r == 0);
 	CHECK(strcmp(cfg.client_name, "drumvoice") == 0);
-	CHECK(cfg.nchannels == 2);
-	CHECK(cfg.channels[0].type == T_PITCH);
-	CHECK(cfg.channels[0].midich == 0);          /* 1-based -> 0 */
-	CHECK(cfg.channels[1].type == T_TRIG);
-	CHECK(cfg.channels[1].midich == 9);          /* channel 10 */
-	CHECK(cfg.channels[1].param == 36);
+	CHECK(cfg.ncvouts == 2);
+	CHECK(cfg.cvouts[0].src == S_PITCH);
+	CHECK(cfg.cvouts[0].midich == 0);          /* 1-based -> 0 */
+	CHECK(cfg.cvouts[1].src == S_TRIG);
+	CHECK(cfg.cvouts[1].midich == 9);          /* channel 10 */
+	CHECK(cfg.cvouts[1].param == 36);
 	CHECK(cfg.nconnects == 1);
 	CHECK(strcmp(cfg.connects[0].from, "pitch1") == 0);
 	CHECK(strcmp(cfg.connects[0].to, "system:playback_1") == 0);
@@ -52,11 +52,11 @@ static void test_clock_defaults(void)
 {
 	config cfg;
 	CHECK(parse("q clock - 24 0.5 0.0\n", &cfg) == 0);
-	CHECK(cfg.channels[0].type == T_CLOCK);
-	CHECK(cfg.channels[0].param == 24);
-	CHECK(cfg.channels[0].pulse_ms == 5.0f);     /* default */
+	CHECK(cfg.cvouts[0].src == S_CLOCK);
+	CHECK(cfg.cvouts[0].param == 24);
+	CHECK(cfg.cvouts[0].pulse_ms == 5.0f);     /* default */
 	CHECK(parse("q clock - 24 0.5 0.0 10\n", &cfg) == 0);
-	CHECK(cfg.channels[0].pulse_ms == 10.0f);    /* explicit */
+	CHECK(cfg.cvouts[0].pulse_ms == 10.0f);    /* explicit */
 }
 
 /* client name defaults when no 'name' line */
@@ -72,7 +72,7 @@ static void test_rejects_bad(void)
 {
 	config cfg;
 	CHECK(parse("bogus pitch 1\n", &cfg) == -1);          /* < 6 fields */
-	CHECK(parse("g notatype 1 - 0.5 0.0\n", &cfg) == -1); /* bad type */
+	CHECK(parse("g notatype 1 - 0.5 0.0\n", &cfg) == -1); /* bad source */
 	CHECK(parse("g gate 99 - 0.5 0.0\n", &cfg) == -1);    /* channel out of range */
 	CHECK(parse("q clock - 0 0.5 0.0\n", &cfg) == -1);    /* division < 1 */
 }

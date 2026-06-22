@@ -9,13 +9,13 @@
 
 /* ------------------------------------------------------------------ state */
 
-static channel chans[MAX_CHANNELS];
-static int     nchannels;
-static int     pulse_samples[MAX_CHANNELS]; /* clock: width in frames */
-static int     pulse_left[MAX_CHANNELS];    /* clock: frames left in pulse */
+static cvout   cvouts[MAX_CVOUTS];
+static int     ncvouts;
+static int     pulse_samples[MAX_CVOUTS]; /* clock: width in frames */
+static int     pulse_left[MAX_CVOUTS];    /* clock: frames left in pulse */
 
-/* Per-channel render adapter, chosen by type at engine_init. */
-static void (*renderfn[MAX_CHANNELS])(int, float *, uint32_t, uint32_t);
+/* Per-CV-output render adapter, chosen by source at engine_init. */
+static void (*renderfn[MAX_CVOUTS])(int, float *, uint32_t, uint32_t);
 
 /* Per-MIDI-channel playing state. Fixed size, no allocation at run time. */
 typedef struct {
@@ -71,31 +71,31 @@ static int is_held(const mchan *m, uint8_t note)
 	return 0;
 }
 
-/* Map a channel's current logical value to a calibrated float sample. */
-static float channel_sample(const channel *c)
+/* Map a CV output's current logical value to a calibrated float sample. */
+static float cvout_sample(const cvout *c)
 {
 	const mchan *m = &state[c->midich];
 	float value;
 
-	switch (c->type) {
-	case T_PITCH:                                   /* semitone index */
+	switch (c->src) {
+	case S_PITCH:                                   /* semitone index */
 		return c->offset + m->last_note * c->scale;
-	case T_GATE: value = m->n > 0 ? 1.0f : 0.0f;            break;
-	case T_TRIG: value = is_held(m, c->param) ? 1.0f : 0.0f; break;
-	case T_VEL:  value = m->velocity / 127.0f;             break;
-	case T_CC:   value = m->cc[c->param] / 127.0f;         break;
+	case S_GATE: value = m->n > 0 ? 1.0f : 0.0f;            break;
+	case S_TRIG: value = is_held(m, c->param) ? 1.0f : 0.0f; break;
+	case S_VEL:  value = m->velocity / 127.0f;             break;
+	case S_CC:   value = m->cc[c->param] / 127.0f;         break;
 	default:     value = 0.0f;                             break;  /* clock: render_clock */
 	}
 	return c->offset + value * c->scale;
 }
 
-/* Per-type render adapters. All share one interface — write channel i's output
- * into frames [from, to) — so fill_segment dispatches without knowing the type. */
+/* Per-source render adapters. All share one interface — write CV output i's
+ * value into frames [from, to) — so fill_segment dispatches without the source. */
 
 /* Constant over the segment: pitch / gate / trig / vel / cc. */
 static void render_const(int i, float *out, uint32_t from, uint32_t to)
 {
-	float s = channel_sample(&chans[i]);
+	float s = cvout_sample(&cvouts[i]);
 	uint32_t f;
 	for (f = from; f < to; f++)
 		out[f] = s;
@@ -104,7 +104,7 @@ static void render_const(int i, float *out, uint32_t from, uint32_t to)
 /* Clock: high while a pulse is counting down, else low. */
 static void render_clock(int i, float *out, uint32_t from, uint32_t to)
 {
-	float hi = chans[i].offset + chans[i].scale, lo = chans[i].offset;
+	float hi = cvouts[i].offset + cvouts[i].scale, lo = cvouts[i].offset;
 	uint32_t f;
 	for (f = from; f < to; f++)
 		out[f] = pulse_left[i] > 0 ? (pulse_left[i]--, hi) : lo;
@@ -114,22 +114,22 @@ static void render_clock(int i, float *out, uint32_t from, uint32_t to)
 static void fill_segment(float *outs[], uint32_t from, uint32_t to)
 {
 	int i;
-	for (i = 0; i < nchannels; i++)
+	for (i = 0; i < ncvouts; i++)
 		renderfn[i](i, outs[i], from, to);
 }
 
 /* ------------------------------------------------------------------ clock */
 
-/* One MIDI timing clock (0xF8): start a fresh pulse on every clock channel
+/* One MIDI timing clock (0xF8): start a fresh pulse on every clock output
  * whose division boundary falls on this tick, then advance the tick. */
 static void clock_tick(void)
 {
 	int i;
 	if (!clk.running)
 		return;
-	for (i = 0; i < nchannels; i++)
-		if (chans[i].type == T_CLOCK
-		    && clk.tick % (uint32_t)chans[i].param == 0)
+	for (i = 0; i < ncvouts; i++)
+		if (cvouts[i].src == S_CLOCK
+		    && clk.tick % (uint32_t)cvouts[i].param == 0)
 			pulse_left[i] = pulse_samples[i];
 	clk.tick++;
 }
@@ -139,25 +139,25 @@ static void clock_stop(void)
 {
 	int i;
 	clk.running = 0;
-	for (i = 0; i < nchannels; i++)
-		if (chans[i].type == T_CLOCK)
+	for (i = 0; i < ncvouts; i++)
+		if (cvouts[i].src == S_CLOCK)
 			pulse_left[i] = 0;
 }
 
 /* ------------------------------------------------------------ public API */
 
-void engine_init(const channel *c, int n, uint32_t sample_rate)
+void engine_init(const cvout *c, int n, uint32_t sample_rate)
 {
 	int i;
-	if (n > MAX_CHANNELS)
-		n = MAX_CHANNELS;
-	nchannels = n;
+	if (n > MAX_CVOUTS)
+		n = MAX_CVOUTS;
+	ncvouts = n;
 	for (i = 0; i < n; i++) {
-		chans[i] = c[i];
+		cvouts[i] = c[i];
 		pulse_left[i] = 0;
-		if (chans[i].type == T_CLOCK) {
+		if (cvouts[i].src == S_CLOCK) {
 			pulse_samples[i] =
-				(int)(chans[i].pulse_ms * sample_rate / 1000.0f);
+				(int)(cvouts[i].pulse_ms * sample_rate / 1000.0f);
 			if (pulse_samples[i] < 1)
 				pulse_samples[i] = 1;
 			renderfn[i] = render_clock;

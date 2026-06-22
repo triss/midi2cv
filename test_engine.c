@@ -30,7 +30,7 @@ static midi_ev mev_rt(uint32_t t, uint8_t status)
 /* pitch tracks the held note, and the transition lands sample-exact */
 static void test_pitch_sample_accurate(void)
 {
-	channel ch = { "p", T_PITCH, 0, -1, 0.008333f, 0.0f, 0 };
+	cvout ch = { "p", S_PITCH, 0, -1, 0.008333f, 0.0f, 0 };
 	float b[64]; float *outs[1] = { b };
 	midi_ev evs[1] = { mev_note_on(32, 0, 60, 100) };
 
@@ -44,7 +44,7 @@ static void test_pitch_sample_accurate(void)
 /* gate is high while a note is held, low after release; state persists */
 static void test_gate_hold_release(void)
 {
-	channel ch = { "g", T_GATE, 0, -1, 0.5f, 0.0f, 0 };
+	cvout ch = { "g", S_GATE, 0, -1, 0.5f, 0.0f, 0 };
 	float b[16]; float *outs[1] = { b };
 	midi_ev on = mev_note_on(0, 0, 64, 100);
 	midi_ev off = mev_note_off(0, 0, 64);
@@ -59,7 +59,7 @@ static void test_gate_hold_release(void)
 /* trig fires only for its bound note */
 static void test_trig_specific_note(void)
 {
-	channel ch = { "t", T_TRIG, 0, 36, 0.5f, 0.0f, 0 };
+	cvout ch = { "t", S_TRIG, 0, 36, 0.5f, 0.0f, 0 };
 	float b[8]; float *outs[1] = { b };
 	midi_ev other = mev_note_on(0, 0, 38, 100);
 	midi_ev mine  = mev_note_on(0, 0, 36, 100);
@@ -74,8 +74,8 @@ static void test_trig_specific_note(void)
 /* vel and cc scale 0..127 -> 0..1 */
 static void test_vel_and_cc(void)
 {
-	channel chv = { "v", T_VEL, 0, -1, 1.0f, 0.0f, 0 };
-	channel chc = { "c", T_CC, 0, 1, 1.0f, 0.0f, 0 };
+	cvout chv = { "v", S_VEL, 0, -1, 1.0f, 0.0f, 0 };
+	cvout chc = { "c", S_CC, 0, 1, 1.0f, 0.0f, 0 };
 	float b[4]; float *outs[1] = { b };
 	midi_ev von = mev_note_on(0, 0, 60, 64);
 	midi_ev cc  = mev_cc(0, 0, 1, 127);
@@ -92,7 +92,7 @@ static void test_vel_and_cc(void)
 static void test_clock_division_and_width(void)
 {
 	/* pulse_ms 0.1 @ 48k -> 4 frames; div 2 */
-	channel ch = { "clk", T_CLOCK, 0, 2, 0.5f, 0.0f, 0.1f };
+	cvout ch = { "clk", S_CLOCK, 0, 2, 0.5f, 0.0f, 0.1f };
 	float b[64]; float *outs[1] = { b };
 	midi_ev evs[3] = { mev_rt(0, 0xf8), mev_rt(10, 0xf8), mev_rt(20, 0xf8) };
 
@@ -108,7 +108,7 @@ static void test_clock_division_and_width(void)
 /* Stop cuts the pulse and halts; later clocks are ignored */
 static void test_clock_stop(void)
 {
-	channel ch = { "clk", T_CLOCK, 0, 1, 0.5f, 0.0f, 0.1f };  /* 4-frame pulse */
+	cvout ch = { "clk", S_CLOCK, 0, 1, 0.5f, 0.0f, 0.1f };  /* 4-frame pulse */
 	float b[8]; float *outs[1] = { b };
 	midi_ev evs[2] = { mev_rt(0, 0xf8), mev_rt(2, 0xfc) };
 
@@ -121,7 +121,7 @@ static void test_clock_stop(void)
 /* Start resets the divider phase */
 static void test_clock_start_resets_phase(void)
 {
-	channel ch = { "clk", T_CLOCK, 0, 4, 0.5f, 0.0f, 0.04f }; /* ~2-frame pulse */
+	cvout ch = { "clk", S_CLOCK, 0, 4, 0.5f, 0.0f, 0.04f }; /* ~2-frame pulse */
 	float b[16]; float *outs[1] = { b };
 	midi_ev evs[5] = {
 		mev_rt(0, 0xf8),   /* tick0 -> fires */

@@ -75,34 +75,35 @@ jack_lsp            # list the ports it created
 
 ## Config format
 
-Line-oriented, `#` starts a comment. Three kinds of line:
+Line-oriented, `#` starts a comment. Each non-comment line defines one **CV
+output** (or a `name` / `connect` directive). Three kinds of line:
 
 ```
 name      <client>          # JACK client name (default: midi2cv)
 connect   <port> <target>   # optional: auto-connect an output at startup
 
-# channel: <port> <type> <midich> <param> <scale> <offset> [pulse_ms]
+# CV output: <port> <source> <midich> <param> <scale> <offset> [pulse_ms]
 pitch1    pitch    1   -    0.008333  0.0
 gate1     gate     1   -    0.5       0.0
 kick      trig     10  36   0.5       0.0
 quarter   clock    -   24   0.5       0.0   5
 ```
 
-Channel fields:
+CV-output fields:
 
 | field      | meaning                                                       |
 |------------|---------------------------------------------------------------|
 | `port`     | JACK output port short name                                   |
-| `type`     | `pitch` / `gate` / `trig` / `vel` / `cc` / `clock` (see below)|
+| `source`   | `pitch` / `gate` / `trig` / `vel` / `cc` / `clock` (see below)|
 | `midich`   | MIDI channel, 1–16 (`-` for `clock`, which is system-wide)    |
 | `param`    | `trig`: note; `cc`: CC number; `clock`: division; else `-`    |
 | `scale`    | calibration: volts-per-unit term                             |
 | `offset`   | calibration: zero-point term                                 |
 | `pulse_ms` | optional; `clock` pulse width in ms (default 5), else ignored |
 
-Channel types and the logical value they map:
+Sources and the logical value they map:
 
-| type    | source                                   | value                       |
+| source  | reads                                    | value                       |
 |---------|------------------------------------------|-----------------------------|
 | `pitch` | top held note on its MIDI channel (mono) | semitone index (held on release) |
 | `gate`  | any note held on its MIDI channel        | 1 held / 0 released         |

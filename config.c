@@ -7,14 +7,14 @@
 
 #include "config.h"
 
-static int parse_type(const char *s, chan_type *out)
+static int parse_source(const char *s, source *out)
 {
-	if (!strcmp(s, "pitch")) *out = T_PITCH;
-	else if (!strcmp(s, "gate")) *out = T_GATE;
-	else if (!strcmp(s, "trig")) *out = T_TRIG;
-	else if (!strcmp(s, "vel"))  *out = T_VEL;
-	else if (!strcmp(s, "cc"))   *out = T_CC;
-	else if (!strcmp(s, "clock")) *out = T_CLOCK;
+	if (!strcmp(s, "pitch")) *out = S_PITCH;
+	else if (!strcmp(s, "gate")) *out = S_GATE;
+	else if (!strcmp(s, "trig")) *out = S_TRIG;
+	else if (!strcmp(s, "vel"))  *out = S_VEL;
+	else if (!strcmp(s, "cc"))   *out = S_CC;
+	else if (!strcmp(s, "clock")) *out = S_CLOCK;
 	else return -1;
 	return 0;
 }
@@ -41,7 +41,7 @@ int config_parse(FILE *f, config *cfg)
 			continue;
 		}
 		if (!strcmp(tok[0], "connect") && ntok >= 3) {
-			if (cfg->nconnects < MAX_CHANNELS) {
+			if (cfg->nconnects < MAX_CVOUTS) {
 				snprintf(cfg->connects[cfg->nconnects].from,
 					 sizeof cfg->connects[0].from, "%s", tok[1]);
 				snprintf(cfg->connects[cfg->nconnects].to,
@@ -51,7 +51,7 @@ int config_parse(FILE *f, config *cfg)
 			continue;
 		}
 
-		/* channel: <port> <type> <midich> <param> <scale> <offset> [pulse_ms]
+		/* CV output: <port> <source> <midich> <param> <scale> <offset> [pulse_ms]
 		 * clock uses midich '-' (system-wide), param = division in clocks,
 		 * and the optional pulse_ms field; others ignore pulse_ms. */
 		if (ntok < 6) {
@@ -59,14 +59,14 @@ int config_parse(FILE *f, config *cfg)
 				lineno);
 			return -1;
 		}
-		if (cfg->nchannels >= MAX_CHANNELS) {
-			fprintf(stderr, "midi2cv: too many channels\n");
+		if (cfg->ncvouts >= MAX_CVOUTS) {
+			fprintf(stderr, "midi2cv: too many CV outputs\n");
 			return -1;
 		}
-		channel *c = &cfg->channels[cfg->nchannels];
+		cvout *c = &cfg->cvouts[cfg->ncvouts];
 		snprintf(c->name, sizeof c->name, "%s", tok[0]);
-		if (parse_type(tok[1], &c->type)) {
-			fprintf(stderr, "midi2cv: line %d: bad type '%s'\n",
+		if (parse_source(tok[1], &c->src)) {
+			fprintf(stderr, "midi2cv: line %d: bad source '%s'\n",
 				lineno, tok[1]);
 			return -1;
 		}
@@ -75,8 +75,8 @@ int config_parse(FILE *f, config *cfg)
 		c->offset   = atof(tok[5]);
 		c->pulse_ms = (ntok >= 7) ? atof(tok[6]) : 5.0f;
 
-		if (c->type == T_CLOCK) {
-			c->midich = 0;                  /* clock has no channel */
+		if (c->src == S_CLOCK) {
+			c->midich = 0;                  /* clock has no MIDI channel */
 			if (c->param < 1) {
 				fprintf(stderr, "midi2cv: line %d: clock division "
 					"must be >= 1\n", lineno);
@@ -90,7 +90,7 @@ int config_parse(FILE *f, config *cfg)
 				return -1;
 			}
 		}
-		cfg->nchannels++;
+		cfg->ncvouts++;
 	}
 	return 0;
 }
