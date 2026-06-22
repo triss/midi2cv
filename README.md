@@ -46,15 +46,16 @@ make
 
 Builds with `-Wall -Wextra`; expect zero warnings.
 
-The MIDI→CV core (`engine.c`/`engine.h`, see [CONTEXT.md](CONTEXT.md)) has no
-JACK dependency, so it is tested directly — no server, no audio capture:
+The MIDI→CV core (`engine.c`/`engine.h`) and the config parser
+(`config.c`/`config.h`) have no JACK dependency, so they are tested directly —
+no server, no audio capture, no temp files (see [CONTEXT.md](CONTEXT.md)):
 
 ```
 make test
 ```
 
-`midi2cv.c` is a thin JACK adapter over the engine: it parses the config, owns
-the ports, and hands each block to `engine_run`.
+`midi2cv.c` is a thin JACK adapter: it loads the config into a value, owns the
+ports, copies MIDI events, and hands each block to `engine_run`.
 
 ## Run
 
