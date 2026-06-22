@@ -14,6 +14,9 @@ static int     nchannels;
 static int     pulse_samples[MAX_CHANNELS]; /* clock: width in frames */
 static int     pulse_left[MAX_CHANNELS];    /* clock: frames left in pulse */
 
+/* Per-channel render adapter, chosen by type at engine_init. */
+static void (*renderfn[MAX_CHANNELS])(int, float *, uint32_t, uint32_t);
+
 /* Per-MIDI-channel playing state. Fixed size, no allocation at run time. */
 typedef struct {
 	uint8_t stack[128];    /* held notes, last = highest priority */
@@ -81,30 +84,38 @@ static float channel_sample(const channel *c)
 	case T_TRIG: value = is_held(m, c->param) ? 1.0f : 0.0f; break;
 	case T_VEL:  value = m->velocity / 127.0f;             break;
 	case T_CC:   value = m->cc[c->param] / 127.0f;         break;
-	case T_CLOCK:                                   /* driven in fill loop */
-	default:     value = 0.0f;                             break;
+	default:     value = 0.0f;                             break;  /* clock: render_clock */
 	}
 	return c->offset + value * c->scale;
 }
 
-/* Write every output's current sample into frames [from, to). */
+/* Per-type render adapters. All share one interface — write channel i's output
+ * into frames [from, to) — so fill_segment dispatches without knowing the type. */
+
+/* Constant over the segment: pitch / gate / trig / vel / cc. */
+static void render_const(int i, float *out, uint32_t from, uint32_t to)
+{
+	float s = channel_sample(&chans[i]);
+	uint32_t f;
+	for (f = from; f < to; f++)
+		out[f] = s;
+}
+
+/* Clock: high while a pulse is counting down, else low. */
+static void render_clock(int i, float *out, uint32_t from, uint32_t to)
+{
+	float hi = chans[i].offset + chans[i].scale, lo = chans[i].offset;
+	uint32_t f;
+	for (f = from; f < to; f++)
+		out[f] = pulse_left[i] > 0 ? (pulse_left[i]--, hi) : lo;
+}
+
+/* Render every output into frames [from, to) through its adapter. */
 static void fill_segment(float *outs[], uint32_t from, uint32_t to)
 {
 	int i;
-	uint32_t f;
-	for (i = 0; i < nchannels; i++) {
-		channel *c = &chans[i];
-		if (c->type == T_CLOCK) {       /* per-sample pulse countdown */
-			float hi = c->offset + c->scale, lo = c->offset;
-			for (f = from; f < to; f++)
-				outs[i][f] = pulse_left[i] > 0
-					? (pulse_left[i]--, hi) : lo;
-		} else {
-			float s = channel_sample(c);
-			for (f = from; f < to; f++)
-				outs[i][f] = s;
-		}
-	}
+	for (i = 0; i < nchannels; i++)
+		renderfn[i](i, outs[i], from, to);
 }
 
 /* ------------------------------------------------------------------ clock */
@@ -149,8 +160,10 @@ void engine_init(const channel *c, int n, uint32_t sample_rate)
 				(int)(chans[i].pulse_ms * sample_rate / 1000.0f);
 			if (pulse_samples[i] < 1)
 				pulse_samples[i] = 1;
+			renderfn[i] = render_clock;
 		} else {
 			pulse_samples[i] = 0;
+			renderfn[i] = render_const;
 		}
 	}
 	memset(state, 0, sizeof state);
