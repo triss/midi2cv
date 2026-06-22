@@ -54,8 +54,8 @@ no server, no audio capture, no temp files (see [CONTEXT.md](CONTEXT.md)):
 make test
 ```
 
-`midi2cv.c` is a thin JACK adapter: it loads the config into a value, owns the
-ports, copies MIDI events, and hands each block to `engine_run`.
+`jack.c` is a thin JACK **backend adapter**: it loads the config into a value,
+owns the ports, copies MIDI events, and hands each block to `engine_run`.
 
 ## Run
 
@@ -161,6 +161,27 @@ Procedure for a `pitch` channel:
 `tools/` holds throwaway helpers for testing against a live JACK server: a
 MIDI-clock generator (`clockgen.c`) and a capture analyzer (`analyze.py`). See
 `tools/README.md`.
+
+## Porting
+
+The audio backend is the only platform-specific part:
+
+- `engine.{c,h}` — MIDI→CV core. No backend types cross its interface
+  (`midi_ev` + planar `float` buffers + sample rate), so it is fully portable.
+- `config.{c,h}` — config parsing. Portable.
+- `jack.c` — the JACK **backend adapter** (owns the client/ports, copies MIDI
+  into `midi_ev`, gathers buffers, calls `engine_run`).
+
+Supporting another backend (PipeWire-native, ALSA, CoreAudio, ASIO/WASAPI) is
+writing one new adapter beside `jack.c`; the engine, config, and tests are
+untouched. Notes:
+
+- JACK / PipeWire / ASIO / CoreAudio hand you planar `float` already; ALSA needs
+  a `float` → interleaved-int conversion in the adapter.
+- Sample-accurate event timing needs the backend to stamp MIDI in frames;
+  otherwise it degrades gracefully to block-granular timing.
+- The DC-coupled output requirement is physical — avoid shared/resampled paths
+  (e.g. WASAPI shared mode) that mangle DC.
 
 ## Not in v1 (possible extensions)
 

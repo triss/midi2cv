@@ -1,9 +1,10 @@
 CFLAGS = -O2 -Wall -Wextra
 LDLIBS = -ljack -lm
 
-midi2cv: midi2cv.o engine.o config.o
+midi2cv: jack.o engine.o config.o
+	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-midi2cv.o: midi2cv.c engine.h config.h
+jack.o: jack.c engine.h config.h
 engine.o: engine.c engine.h
 config.o: config.c config.h engine.h
 

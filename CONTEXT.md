@@ -17,6 +17,18 @@ is tested directly (`test_engine.c`, `make test`) without a running server. The
 JACK process callback is a thin **adapter** over it that copies JACK events
 into `midi_ev` and gathers the output buffers.
 
+## backend adapter
+
+The thin, backend-specific layer that drives the engine: it owns the audio
+client/ports, copies incoming MIDI into `midi_ev`, gathers the planar `float`
+output buffers, and calls `engine_run` per block. `jack.c` is the current one.
+**Porting is writing a new adapter** — the engine, config, and tests do not
+change, because no backend types cross the engine interface (only `midi_ev`,
+planar `float`, and a sample rate). Sample-accuracy needs the backend to stamp
+MIDI events in frames; otherwise the adapter falls back to block-granular
+timing. The DC-coupled output is physical — avoid shared/resampled paths that
+mangle DC.
+
 ## CV output
 
 One control-voltage output: a single JACK audio port driven by one MIDI

@@ -1,11 +1,13 @@
 /*
- * midi2cv - JACK adapter over the MIDI->CV engine (see engine.h, config.h,
- * CONTEXT.md).
+ * jack - the JACK backend adapter for midi2cv (see engine.h, config.h,
+ * CONTEXT.md "backend adapter").
  *
- * This translation unit is the thin adapter: it loads the config, owns the
- * JACK client and ports, copies JACK MIDI events into portable midi_ev, and
- * hands each block to engine_run. All musical logic lives in the engine; all
- * parsing lives in config.
+ * The thin, backend-specific layer: it loads the config, owns the JACK client
+ * and ports, copies JACK MIDI events into portable midi_ev, gathers the output
+ * buffers, and hands each block to engine_run. All musical logic lives in the
+ * engine; all parsing lives in config. Porting to another backend (ALSA,
+ * PipeWire-native, CoreAudio, ASIO/WASAPI) means writing one new adapter like
+ * this — nothing else moves, because no backend types cross the engine seam.
  *
  * One instance = one config file describing a flat list of CV outputs.
  *
