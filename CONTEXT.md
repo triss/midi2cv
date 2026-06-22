@@ -21,13 +21,16 @@ into `midi_ev` and gathers the output buffers.
 
 The thin, backend-specific layer that drives the engine: it owns the audio
 client/ports, copies incoming MIDI into `midi_ev`, gathers the planar `float`
-output buffers, and calls `engine_run` per block. `jack.c` is the current one.
-**Porting is writing a new adapter** — the engine, config, and tests do not
-change, because no backend types cross the engine interface (only `midi_ev`,
-planar `float`, and a sample rate). Sample-accuracy needs the backend to stamp
-MIDI events in frames; otherwise the adapter falls back to block-granular
-timing. The DC-coupled output is physical — avoid shared/resampled paths that
-mangle DC.
+output buffers, calls `engine_run` per block, and runs until a signal. It sits
+behind one entry point, `backend_run(cfg, test)` (`backend.h`), which the
+program shell (`cli.c`) calls after parsing argv and loading the config.
+`jack.c` is the current adapter. **Porting is writing a new `backend_run`** —
+the shell, engine, config, and tests do not change, because no backend types
+cross the engine interface (only `midi_ev`, planar `float`, and a sample rate)
+or the `backend_run` seam (only `config` and `test_req`). Sample-accuracy needs
+the backend to stamp MIDI events in frames; otherwise the adapter falls back to
+block-granular timing. The DC-coupled output is physical — avoid
+shared/resampled paths that mangle DC.
 
 ## CV output
 
