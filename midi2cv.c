@@ -1,14 +1,13 @@
 /*
- * midi2cv - a minimal JACK client turning MIDI into CV for an Expert Sleepers
- * ES-3 (DC-coupled audio out -> ES-3 -> modular).
+ * midi2cv - JACK adapter over the MIDI->CV engine (see engine.h, CONTEXT.md).
+ *
+ * This translation unit is the thin adapter: it parses the config, owns the
+ * JACK client and ports, copies JACK MIDI events into portable midi_ev, and
+ * hands each block to engine_run. All musical logic lives in the engine.
  *
  * One instance = one config file describing a flat list of output channels.
- * Each channel is one JACK audio port driven by one configurable MIDI source
- * (pitch / gate / trig / vel / cc) and mapped to a float sample value via two
- * per-channel calibration constants (scale, offset).
  *
- * Layout, top to bottom: types -> MIDI state -> config parsing -> JACK setup
- * -> process callback -> main.
+ * Layout: config parsing -> process callback -> JACK setup -> main.
  */
 
 #include <stdio.h>
@@ -21,42 +20,16 @@
 #include <jack/jack.h>
 #include <jack/midiport.h>
 
-/* ------------------------------------------------------------------ types */
+#include "engine.h"
 
-typedef enum { T_PITCH, T_GATE, T_TRIG, T_VEL, T_CC, T_CLOCK } chan_type;
+#define MAX_EVENTS 1024        /* per-block MIDI events copied for the engine */
 
-typedef struct {
-	char       name[64];   /* JACK port short name */
-	chan_type  type;
-	int        midich;     /* 0..15 (1-based in the config file) */
-	int        param;      /* trig: note; cc: CC; clock: division; else -1 */
-	float      scale;
-	float      offset;
-	float      pulse_ms;   /* clock: pulse width (config) */
-	int        pulse_samples; /* clock: pulse width in frames (derived) */
-	int        pulse_left; /* clock: frames remaining in current pulse */
-	jack_port_t *port;
-} channel;
-
-/* Per-MIDI-channel playing state. Fixed size, no allocation at run time. */
-typedef struct {
-	uint8_t stack[128];    /* held notes, last = highest priority */
-	int     n;             /* number of held notes */
-	int     last_note;     /* top note, held after release (pitch S&H) */
-	uint8_t velocity;      /* velocity of the most recent note-on */
-	uint8_t cc[128];       /* last value of every CC */
-} mchan;
-
-#define MAX_CHANNELS 64
-
-static channel channels[MAX_CHANNELS];
+static channel channels[MAX_CHANNELS];   /* parsed config, passed to the engine */
 static int     nchannels;
 static char    client_name[64] = "midi2cv";
-static mchan   state[16];
 
-/* MIDI-clock transport state (system real-time, no channel). Runs by default
- * so bare clock sources work; Start resets phase, Stop halts, Continue resumes. */
-static struct { int running; uint32_t tick; } clk = { 1, 0 };
+/* JACK ports, parallel to channels[] — an adapter concern, not the engine's. */
+static jack_port_t *ports[MAX_CHANNELS];
 
 /* connect requests: <port short name> -> <jack target>, applied at startup */
 static struct { char from[64]; char to[128]; } connects[MAX_CHANNELS];
@@ -70,64 +43,6 @@ static float test_value;
 static jack_client_t *client;
 static jack_port_t   *midi_in;
 static volatile sig_atomic_t running = 1;
-
-/* ------------------------------------------------------------- MIDI state */
-
-static void note_on(mchan *m, uint8_t note, uint8_t vel)
-{
-	int i;
-	m->velocity = vel;
-	for (i = 0; i < m->n; i++)        /* already held: move to top */
-		if (m->stack[i] == note) {
-			memmove(&m->stack[i], &m->stack[i + 1], m->n - i - 1);
-			m->n--;
-			break;
-		}
-	if (m->n < 128)
-		m->stack[m->n++] = note;
-	m->last_note = note;
-}
-
-static void note_off(mchan *m, uint8_t note)
-{
-	int i;
-	for (i = 0; i < m->n; i++)
-		if (m->stack[i] == note) {
-			memmove(&m->stack[i], &m->stack[i + 1], m->n - i - 1);
-			m->n--;
-			break;
-		}
-	if (m->n > 0)
-		m->last_note = m->stack[m->n - 1];
-}
-
-static int is_held(const mchan *m, uint8_t note)
-{
-	int i;
-	for (i = 0; i < m->n; i++)
-		if (m->stack[i] == note)
-			return 1;
-	return 0;
-}
-
-/* Map a channel's current logical value to a calibrated float sample. */
-static float channel_sample(const channel *c)
-{
-	const mchan *m = &state[c->midich];
-	float value;
-
-	switch (c->type) {
-	case T_PITCH:                                   /* semitone index */
-		return c->offset + m->last_note * c->scale;
-	case T_GATE: value = m->n > 0 ? 1.0f : 0.0f;            break;
-	case T_TRIG: value = is_held(m, c->param) ? 1.0f : 0.0f; break;
-	case T_VEL:  value = m->velocity / 127.0f;             break;
-	case T_CC:   value = m->cc[c->param] / 127.0f;         break;
-	case T_CLOCK:                                   /* driven in fill loop */
-	default:     value = 0.0f;                             break;
-	}
-	return c->offset + value * c->scale;
-}
 
 /* --------------------------------------------------------- config parsing */
 
@@ -236,62 +151,17 @@ fail:
 
 /* ------------------------------------------------------- process callback */
 
-/* Write every output's current sample into frames [from, to). */
-static void fill_segment(jack_default_audio_sample_t *outs[],
-			 jack_nframes_t from, jack_nframes_t to)
-{
-	int i;
-	jack_nframes_t f;
-	for (i = 0; i < nchannels; i++) {
-		channel *c = &channels[i];
-		if (c->type == T_CLOCK) {       /* per-sample pulse countdown */
-			float hi = c->offset + c->scale, lo = c->offset;
-			for (f = from; f < to; f++)
-				outs[i][f] = c->pulse_left > 0
-					? (c->pulse_left--, hi) : lo;
-		} else {
-			float s = channel_sample(c);
-			for (f = from; f < to; f++)
-				outs[i][f] = s;
-		}
-	}
-}
-
-/* One MIDI timing clock (0xF8): start a fresh pulse on every clock channel
- * whose division boundary falls on this tick, then advance the tick. */
-static void clock_tick(void)
-{
-	int i;
-	if (!clk.running)
-		return;
-	for (i = 0; i < nchannels; i++)
-		if (channels[i].type == T_CLOCK
-		    && clk.tick % (uint32_t)channels[i].param == 0)
-			channels[i].pulse_left = channels[i].pulse_samples;
-	clk.tick++;
-}
-
-/* Stop (0xFC): halt and drop every clock output low. */
-static void clock_stop(void)
-{
-	int i;
-	clk.running = 0;
-	for (i = 0; i < nchannels; i++)
-		if (channels[i].type == T_CLOCK)
-			channels[i].pulse_left = 0;
-}
-
 static int process(jack_nframes_t nframes, void *arg)
 {
-	void *mbuf = jack_port_get_buffer(midi_in, nframes);
-	jack_default_audio_sample_t *outs[MAX_CHANNELS];
-	jack_nframes_t cursor = 0;
-	uint32_t ev, nevents;
-	int i;
+	void    *mbuf = jack_port_get_buffer(midi_in, nframes);
+	float   *outs[MAX_CHANNELS];
+	midi_ev  evs[MAX_EVENTS];
+	uint32_t ev, count;
+	int      i, nev = 0;
 	(void)arg;
 
 	for (i = 0; i < nchannels; i++)
-		outs[i] = jack_port_get_buffer(channels[i].port, nframes);
+		outs[i] = jack_port_get_buffer(ports[i], nframes);
 
 	if (test_mode) {
 		for (i = 0; i < nchannels; i++) {
@@ -303,47 +173,18 @@ static int process(jack_nframes_t nframes, void *arg)
 		return 0;
 	}
 
-	/* Walk events in time order; fill each output up to the event's frame
-	 * with pre-event state, then apply it. Transitions land sample-exact. */
-	nevents = jack_midi_get_event_count(mbuf);
-	for (ev = 0; ev < nevents; ev++) {
+	/* Copy JACK events into portable midi_ev for the engine. */
+	count = jack_midi_get_event_count(mbuf);
+	for (ev = 0; ev < count && nev < MAX_EVENTS; ev++) {
 		jack_midi_event_t e;
-		uint8_t status, ch;
 		if (jack_midi_event_get(&e, mbuf, ev))
 			continue;
-		if (e.time > cursor) {
-			fill_segment(outs, cursor, e.time);
-			cursor = e.time;
-		}
-		if (e.size == 1) {               /* system real-time, 1 byte */
-			switch (e.buffer[0]) {
-			case 0xf8: clock_tick(); break;          /* timing clock */
-			case 0xfa: clk.tick = 0; clk.running = 1; break; /* start */
-			case 0xfb: clk.running = 1; break;       /* continue */
-			case 0xfc: clock_stop(); break;          /* stop */
-			}
-			continue;
-		}
-		if (e.size < 3)                  /* handled channel msgs are 3 bytes */
-			continue;
-		status = e.buffer[0] & 0xf0;
-		ch     = e.buffer[0] & 0x0f;
-		switch (status) {
-		case 0x90:                       /* note on */
-			if (e.buffer[2] > 0)
-				note_on(&state[ch], e.buffer[1], e.buffer[2]);
-			else
-				note_off(&state[ch], e.buffer[1]);
-			break;
-		case 0x80:                       /* note off */
-			note_off(&state[ch], e.buffer[1]);
-			break;
-		case 0xb0:                       /* control change */
-			state[ch].cc[e.buffer[1]] = e.buffer[2];
-			break;
-		}
+		evs[nev].time = e.time;
+		evs[nev].len  = e.size > 3 ? 3 : (uint8_t)e.size;
+		memcpy(evs[nev].data, e.buffer, evs[nev].len);
+		nev++;
 	}
-	fill_segment(outs, cursor, nframes);
+	engine_run(evs, nev, outs, nframes);
 	return 0;
 }
 
@@ -361,20 +202,12 @@ static int setup_jack(void)
 		return -1;
 	}
 	jack_set_process_callback(client, process, NULL);
-
-	jack_nframes_t sr = jack_get_sample_rate(client);
-	for (i = 0; i < nchannels; i++)
-		if (channels[i].type == T_CLOCK) {
-			channels[i].pulse_samples =
-				(int)(channels[i].pulse_ms * sr / 1000.0f);
-			if (channels[i].pulse_samples < 1)
-				channels[i].pulse_samples = 1;
-		}
+	engine_init(channels, nchannels, jack_get_sample_rate(client));
 
 	midi_in = jack_port_register(client, "midi_in", JACK_DEFAULT_MIDI_TYPE,
 				     JackPortIsInput, 0);
 	for (i = 0; i < nchannels; i++)
-		channels[i].port = jack_port_register(client, channels[i].name,
+		ports[i] = jack_port_register(client, channels[i].name,
 			JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
 
 	if (jack_activate(client)) {
