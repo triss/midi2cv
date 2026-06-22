@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1340 800" font-family="'Segoe UI', Helvetica, Arial, sans-serif">
+  <rect width="1340" height="800" fill="#ffffff"/>
+  <text x="50" y="56" font-size="28" font-weight="700" fill="#111111">midi2cv · patterns that could (hypothetically) tidy it</text>
+  <text x="50" y="86" font-size="15.5" fill="#444444">Trading minimalism for structure. Each would add lines — the question is whether the structure pays. An honest verdict on each.</text>
+
+  <!-- verdict key -->
+  <g font-size="13">
+    <rect x="50" y="106" width="16" height="16" rx="3" fill="#eaf5ef" stroke="#0b7a4b" stroke-width="1.6"/>
+    <text x="74" y="119" fill="#333333">worth it / already done</text>
+    <rect x="270" y="106" width="16" height="16" rx="3" fill="#fdf3ee" stroke="#c04a00" stroke-width="1.6"/>
+    <text x="294" y="119" fill="#333333">only if it grows</text>
+    <rect x="450" y="106" width="16" height="16" rx="3" fill="#eaf1f8" stroke="#0061a8" stroke-width="1.6"/>
+    <text x="474" y="119" fill="#333333">already mostly present</text>
+    <rect x="680" y="106" width="16" height="16" rx="3" fill="#f1f2f4" stroke="#6b7280" stroke-width="1.6"/>
+    <text x="704" y="119" fill="#333333">probably over-engineering here</text>
+  </g>
+
+  <!-- ===== C1 Type Object ===== -->
+  <rect x="50" y="142" width="390" height="252" rx="12" fill="#ffffff" stroke="#c04a00" stroke-width="2.5"/>
+  <text x="70" y="174" font-size="17" font-weight="700" fill="#111111">Type Object</text>
+  <text x="70" y="193" font-size="12.5" fill="#666666" font-style="italic">a vtable table</text>
+  <rect x="290" y="156" width="132" height="26" rx="13" fill="#fdf3ee" stroke="#c04a00" stroke-width="1.5"/>
+  <text x="356" y="174" font-size="12" font-weight="700" fill="#c04a00" text-anchor="middle">IF IT GROWS</text>
+  <text x="70" y="222" font-size="13" fill="#222222"><tspan font-weight="700">Cleans:</tspan> the twin switches in engine_init</text>
+  <text x="70" y="240" font-size="13" fill="#222222">+ cvout_sample.</text>
+  <text x="70" y="266" font-size="13" fill="#222222"><tspan font-weight="700">Shape:</tspan> const source_type[] = { init,</text>
+  <text x="70" y="284" font-size="13" fill="#222222">sample, render }, indexed by the enum.</text>
+  <text x="70" y="310" font-size="13" fill="#222222"><tspan font-weight="700">Cost:</tspan> a vtable + per-source fns wrapping</text>
+  <text x="70" y="328" font-size="13" fill="#222222">one-line value lookups.</text>
+  <text x="70" y="356" font-size="12.5" fill="#9a3c00" font-style="italic">Net: "add a source = one row" — but pitch's</text>
+  <text x="70" y="374" font-size="12.5" fill="#9a3c00" font-style="italic">render still depends on config; clock has no sample.</text>
+
+  <!-- ===== C2 Command table ===== -->
+  <rect x="470" y="142" width="390" height="252" rx="12" fill="#ffffff" stroke="#6b7280" stroke-width="2.5"/>
+  <text x="490" y="174" font-size="17" font-weight="700" fill="#111111">Command table</text>
+  <text x="490" y="193" font-size="12.5" fill="#666666" font-style="italic">MIDI handlers</text>
+  <rect x="742" y="156" width="100" height="26" rx="13" fill="#f1f2f4" stroke="#6b7280" stroke-width="1.5"/>
+  <text x="792" y="174" font-size="12" font-weight="700" fill="#6b7280" text-anchor="middle">MARGINAL</text>
+  <text x="490" y="222" font-size="13" fill="#222222"><tspan font-weight="700">Cleans:</tspan> the status-byte switch inside</text>
+  <text x="490" y="240" font-size="13" fill="#222222">engine_run.</text>
+  <text x="490" y="266" font-size="13" fill="#222222"><tspan font-weight="700">Shape:</tspan> one handler fn per status —</text>
+  <text x="490" y="284" font-size="13" fill="#222222">note on / off, cc, system real-time.</text>
+  <text x="490" y="310" font-size="13" fill="#222222"><tspan font-weight="700">Cost:</tspan> indirection for what is a tidy,</text>
+  <text x="490" y="328" font-size="13" fill="#222222">four-case switch today.</text>
+  <text x="490" y="356" font-size="12.5" fill="#555555" font-style="italic">Net: pays only if the MIDI surface grows</text>
+  <text x="490" y="374" font-size="12.5" fill="#555555" font-style="italic">a great deal (NRPN, sysex, MPE…).</text>
+
+  <!-- ===== C3 Decorator ===== -->
+  <rect x="890" y="142" width="390" height="252" rx="12" fill="#ffffff" stroke="#0b7a4b" stroke-width="2.5"/>
+  <text x="910" y="174" font-size="17" font-weight="700" fill="#111111">Decorator</text>
+  <text x="910" y="193" font-size="12.5" fill="#666666" font-style="italic">composable post-FX</text>
+  <rect x="1162" y="156" width="100" height="26" rx="13" fill="#eaf5ef" stroke="#0b7a4b" stroke-width="1.5"/>
+  <text x="1212" y="174" font-size="12" font-weight="700" fill="#0b7a4b" text-anchor="middle">PROMISING</text>
+  <text x="910" y="222" font-size="13" fill="#222222"><tspan font-weight="700">Cleans:</tspan> glide as its own renderer —</text>
+  <text x="910" y="240" font-size="13" fill="#222222">and unlocks cc / vel slew for free.</text>
+  <text x="910" y="266" font-size="13" fill="#222222"><tspan font-weight="700">Shape:</tspan> slew(inner) wraps any source;</text>
+  <text x="910" y="284" font-size="13" fill="#222222">compose smoothing onto a value.</text>
+  <text x="910" y="310" font-size="13" fill="#222222"><tspan font-weight="700">Cost:</tspan> a wrapper layer + one more call</text>
+  <text x="910" y="328" font-size="13" fill="#222222">in the hot path per decorated output.</text>
+  <text x="910" y="356" font-size="12.5" fill="#0b6a43" font-style="italic">Net: the one that could genuinely simplify</text>
+  <text x="910" y="374" font-size="12.5" fill="#0b6a43" font-style="italic">as smoothing spreads beyond pitch.</text>
+
+  <!-- ===== C4 Strategy ===== -->
+  <rect x="50" y="414" width="390" height="252" rx="12" fill="#ffffff" stroke="#0061a8" stroke-width="2.5"/>
+  <text x="70" y="446" font-size="17" font-weight="700" fill="#111111">Strategy</text>
+  <text x="70" y="465" font-size="12.5" fill="#666666" font-style="italic">formalised</text>
+  <rect x="312" y="428" width="110" height="26" rx="13" fill="#eaf1f8" stroke="#0061a8" stroke-width="1.5"/>
+  <text x="367" y="446" font-size="12" font-weight="700" fill="#0061a8" text-anchor="middle">80% DONE</text>
+  <text x="70" y="494" font-size="13" fill="#222222"><tspan font-weight="700">Cleans:</tspan> the informal render fn pointer.</text>
+  <text x="70" y="520" font-size="13" fill="#222222"><tspan font-weight="700">Shape:</tspan> each source an explicit strategy</text>
+  <text x="70" y="538" font-size="13" fill="#222222">object behind one interface.</text>
+  <text x="70" y="564" font-size="13" fill="#222222"><tspan font-weight="700">Cost:</tspan> mostly names + a struct; little</text>
+  <text x="70" y="582" font-size="13" fill="#222222">genuinely new behaviour.</text>
+  <text x="70" y="610" font-size="12.5" fill="#0a4f86" font-style="italic">Net: you already have this — formalising</text>
+  <text x="70" y="628" font-size="12.5" fill="#0a4f86" font-style="italic">is polish, not change.</text>
+
+  <!-- ===== C5 Factory ===== -->
+  <rect x="470" y="414" width="390" height="252" rx="12" fill="#ffffff" stroke="#c04a00" stroke-width="2.5"/>
+  <text x="490" y="446" font-size="17" font-weight="700" fill="#111111">Factory</text>
+  <text x="490" y="465" font-size="12.5" fill="#666666" font-style="italic">construct cvslots</text>
+  <rect x="772" y="428" width="70" height="26" rx="13" fill="#fdf3ee" stroke="#c04a00" stroke-width="1.5"/>
+  <text x="807" y="446" font-size="12" font-weight="700" fill="#c04a00" text-anchor="middle">MINOR</text>
+  <text x="490" y="494" font-size="13" fill="#222222"><tspan font-weight="700">Cleans:</tspan> construction logic scattered</text>
+  <text x="490" y="512" font-size="13" fill="#222222">through engine_init.</text>
+  <text x="490" y="538" font-size="13" fill="#222222"><tspan font-weight="700">Shape:</tspan> make_cvslot(cvout) picks and</text>
+  <text x="490" y="556" font-size="13" fill="#222222">wires the right strategy + state.</text>
+  <text x="490" y="582" font-size="13" fill="#222222"><tspan font-weight="700">Cost:</tspan> one more indirection.</text>
+  <text x="490" y="610" font-size="12.5" fill="#9a3c00" font-style="italic">Net: a small win — and best done together</text>
+  <text x="490" y="628" font-size="12.5" fill="#9a3c00" font-style="italic">with the Type Object table, not alone.</text>
+
+  <!-- ===== C6 Adapter ===== -->
+  <rect x="890" y="414" width="390" height="252" rx="12" fill="#ffffff" stroke="#0b7a4b" stroke-width="2.5"/>
+  <text x="910" y="446" font-size="17" font-weight="700" fill="#111111">Adapter</text>
+  <text x="910" y="465" font-size="12.5" fill="#666666" font-style="italic">already in place</text>
+  <rect x="1192" y="428" width="70" height="26" rx="13" fill="#eaf5ef" stroke="#0b7a4b" stroke-width="1.5"/>
+  <text x="1227" y="446" font-size="12" font-weight="700" fill="#0b7a4b" text-anchor="middle">DONE</text>
+  <text x="910" y="494" font-size="13" fill="#222222"><tspan font-weight="700">Cleans:</tspan> backend coupling — the original</text>
+  <text x="910" y="512" font-size="13" fill="#222222">problem this project solved.</text>
+  <text x="910" y="538" font-size="13" fill="#222222"><tspan font-weight="700">Shape:</tspan> backend_run(config, test) —</text>
+  <text x="910" y="556" font-size="13" fill="#222222">the JACK-free seam in backend.h.</text>
+  <text x="910" y="582" font-size="13" fill="#222222"><tspan font-weight="700">Cost:</tspan> paid already; one file is the adapter.</text>
+  <text x="910" y="610" font-size="12.5" fill="#0b6a43" font-style="italic">Net: the reference example — the pattern</text>
+  <text x="910" y="628" font-size="12.5" fill="#0b6a43" font-style="italic">this codebase already lives by.</text>
+
+  <!-- bottom take -->
+  <text x="50" y="708" font-size="15" fill="#222222">Most of these trade ~800 readable lines for structure that pays off only at a scale midi2cv may never reach. Two are worth watching —</text>
+  <text x="50" y="730" font-size="15" fill="#222222"><tspan font-weight="700" fill="#0b7a4b">Decorator</tspan> (if smoothing spreads beyond pitch) and the <tspan font-weight="700" fill="#c04a00">Type Object</tspan> table (if sources multiply). The rest is structure for its own sake — and note the</text>
+  <text x="50" y="752" font-size="15" fill="#222222">codebase already uses <tspan font-weight="700">Adapter</tspan> and <tspan font-weight="700">Strategy</tspan> exactly where they earned their keep.</text>
+</svg>

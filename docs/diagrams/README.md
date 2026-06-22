@@ -25,3 +25,7 @@ meaning never rests on colour alone.
 ## Why it belongs
 
 - [11 · permacomputing](11-permacomputing.svg) — a small durable core that outlives its hardware, and which salvaged machines can run it with which adapter.
+
+## If minimalism weren't the constraint
+
+- [12 · patterns that could tidy it](12-patterns.svg) — design patterns that might clean the code up (even at the cost of length), each with an honest verdict on whether the structure pays.
